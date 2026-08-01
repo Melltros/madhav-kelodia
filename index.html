@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Madhav Kelodia — AI Filmmaker, Creative Developer &amp; Video Editor</title>
+<meta name="description" content="Portfolio of Madhav Kelodia — AI Filmmaker, Creative Developer, and Video Editor. Worked with ZEE5, BRB NONO'S. Featured at BIFFes Film Festival.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,200;0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,300;1,9..40,400&display=swap" rel="stylesheet">
+
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+
+:root{
+  --bg:#F7F6F3;--bg-warm:#EFEDE8;--text:#1B1B1B;--text-2:#7A7A7A;--text-3:#B0ADA6;
+  --border:rgba(27,27,27,0.1);--border-md:rgba(27,27,27,0.18);
+  --card-bg:#EDECEA;--dark-card:#181714;
+  --serif:'DM Serif Display',Georgia,serif;
+  --sans:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;
+  --ease:cubic-bezier(0.16,1,0.3,1);--snap:cubic-bezier(0.34,1.56,0.64,1);
+  --nav-h:68px;--max-w:1440px;--pad-x:clamp(24px,5vw,80px);
+}
+
+html{background:var(--bg)}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);overflow-x:hidden;cursor:none;-webkit-font-smoothing:antialiased}
+::selection{background:var(--text);color:var(--bg)}
+::-webkit-scrollbar{width:0}
+
+/* DOT CANVAS */
+#dot-canvas{position:fixed;inset:0;z-index:0;pointer-events:none}
+
+/* CURSOR */
+#cur-dot{position:fixed;width:8px;height:8px;background:var(--text);border-radius:50%;pointer-events:none;z-index:99999;transform:translate(-50%,-50%);transition:width .25s var(--ease),height .25s var(--ease),opacity .2s}
+#cur-ring{position:fixed;width:36px;height:36px;border:1.5px solid rgba(27,27,27,0.35);border-radius:50%;pointer-events:none;z-index:99998;transform:translate(-50%,-50%);transition:width .4s var(--ease),height .4s var(--ease),border-color .3s,background .3s}
+body.cur-hover #cur-ring{width:56px;height:56px;border-color:rgba(27,27,27,0.6);background:rgba(27,27,27,0.04)}
+body.cur-hover #cur-dot{opacity:0}
+@media(max-width:768px){#cur-dot,#cur-ring{display:none}body{cursor:auto}}
+
+/* SCROLL BAR */
+#scroll-bar{position:fixed;top:0;left:0;height:2px;background:var(--text);width:0%;z-index:10000;opacity:.3}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;height:var(--nav-h);display:flex;align-items:center;justify-content:space-between;padding:0 var(--pad-x);z-index:5000;transition:background .5s var(--ease),border-color .5s,backdrop-filter .5s}
+nav.scrolled{background:rgba(247,246,243,0.88);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--border)}
+.nav-brand{font-family:var(--sans);font-size:.95rem;font-weight:500;letter-spacing:-.01em;text-decoration:none;color:var(--text);cursor:none}
+.nav-brand span{font-style:italic;font-family:var(--serif)}
+.nav-right{display:flex;align-items:center;gap:36px;list-style:none}
+.nav-right a{font-size:.82rem;font-weight:400;color:var(--text-2);text-decoration:none;letter-spacing:.02em;position:relative;cursor:none;transition:color .25s}
+.nav-right a::after{content:'';position:absolute;bottom:-2px;left:0;width:0;height:1px;background:var(--text);transition:width .35s var(--ease)}
+.nav-right a:hover{color:var(--text)}
+.nav-right a:hover::after{width:100%}
+.nav-cta{padding:9px 22px!important;border:1px solid var(--border-md)!important;border-radius:100px;color:var(--text)!important;font-weight:500!important;transition:background .3s,color .3s,border-color .3s!important}
+.nav-cta:hover{background:var(--text)!important;color:var(--bg)!important}
+.nav-cta::after{display:none!important}
+.nav-hamburger{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:none;padding:4px}
+.nav-hamburger span{display:block;width:24px;height:1.5px;background:var(--text);transition:transform .4s var(--ease),opacity .3s}
+
+/* MOBILE DRAWER */
+.mobile-drawer{position:fixed;inset:0;background:var(--bg);z-index:4500;display:flex;flex-direction:column;justify-content:center;padding:var(--pad-x);transform:translateX(100%);transition:transform .6s var(--ease)}
+.mobile-drawer.open{transform:translateX(0)}
+.mobile-nav-links{list-style:none}
+.mobile-nav-links li{border-bottom:1px solid var(--border)}
+.mobile-nav-links a{display:block;padding:20px 0;font-family:var(--serif);font-size:clamp(2rem,7vw,3.5rem);color:var(--text);text-decoration:none}
+
+/* HERO */
+#hero{position:relative;min-height:100svh;display:flex;flex-direction:column;justify-content:space-between;padding:calc(var(--nav-h) + 60px) var(--pad-x) 60px;z-index:1;overflow:hidden}
+.hero-top{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:end;flex:1;padding-bottom:80px}
+.hero-left{max-width:680px}
+.hero-eyebrow{display:flex;align-items:center;gap:16px;margin-bottom:40px;opacity:1}
+.hero-pill{display:inline-flex;align-items:center;gap:8px;font-size:.72rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--text-2);border:1px solid var(--border);padding:6px 14px;border-radius:100px}
+.hero-pill-dot{width:6px;height:6px;border-radius:50%;background:#4ade80;box-shadow:0 0 6px rgba(74,222,128,0.6);animation:pulseDot 2s ease-in-out infinite}
+@keyframes pulseDot{0%,100%{opacity:1}50%{opacity:.4}}
+
+.hero-headline{font-family:var(--serif);font-size:clamp(3.2rem,7vw,7rem);line-height:1;letter-spacing:-.02em;color:var(--text);opacity:1}
+.hero-headline em{font-style:italic;color:var(--text-2)}
+
+.hero-right{display:flex;flex-direction:column;justify-content:flex-end;gap:32px;padding-bottom:8px;opacity:1}
+.hero-desc{font-size:clamp(1rem,1.5vw,1.15rem);color:var(--text-2);line-height:1.7;max-width:420px;font-weight:300}
+.hero-roles{display:flex;flex-direction:column;gap:6px}
+.hero-role{font-size:.78rem;font-weight:400;color:var(--text-3);letter-spacing:.04em;text-transform:uppercase;display:flex;align-items:center;gap:10px}
+.hero-role::before{content:'';display:block;width:12px;height:1px;background:var(--text-3)}
+.hero-ctas{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+
+.btn-primary{display:inline-flex;align-items:center;gap:10px;padding:14px 28px;background:var(--text);color:var(--bg);text-decoration:none;border-radius:100px;font-size:.85rem;font-weight:500;letter-spacing:.02em;cursor:none;transition:background .3s,transform .3s var(--ease),box-shadow .3s}
+.btn-primary:hover{background:#2d2d2d;transform:translateY(-2px);box-shadow:0 8px 24px rgba(27,27,27,0.2)}
+.btn-ghost{display:inline-flex;align-items:center;gap:10px;padding:14px 28px;background:transparent;color:var(--text-2);text-decoration:none;border-radius:100px;font-size:.85rem;font-weight:400;border:1px solid var(--border);cursor:none;transition:border-color .3s,color .3s}
+.btn-ghost:hover{border-color:var(--border-md);color:var(--text)}
+
+.hero-bottom{display:flex;align-items:center;justify-content:space-between;padding-top:40px;border-top:1px solid var(--border);opacity:1;flex-wrap:wrap;gap:24px}
+.hero-creds{display:flex;align-items:center;gap:40px;flex-wrap:wrap}
+.hero-cred{display:flex;flex-direction:column;gap:4px}
+.hero-cred-val{font-size:.82rem;font-weight:600;color:var(--text);letter-spacing:.02em}
+.hero-cred-label{font-size:.7rem;color:var(--text-3);letter-spacing:.05em;text-transform:uppercase}
+.hero-scroll-hint{font-size:.72rem;color:var(--text-3);letter-spacing:.08em;text-transform:uppercase;display:flex;align-items:center;gap:12px}
+.scroll-line{width:32px;height:1px;background:var(--text-3);display:inline-block;animation:scrollLine 2s ease-in-out infinite}
+@keyframes scrollLine{0%,100%{transform:scaleX(1);opacity:1}50%{transform:scaleX(.4);opacity:.4}}
+
+/* TICKER */
+.ticker{position:relative;z-index:1;width:100%;overflow:hidden;border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:16px 0;background:var(--bg)}
+.ticker-track{display:inline-flex;gap:0;animation:tickerRoll 35s linear infinite;white-space:nowrap}
+.ticker-item{display:inline-flex;align-items:center;gap:24px;padding:0 24px;font-size:.75rem;font-weight:400;letter-spacing:.14em;text-transform:uppercase;color:var(--text-2)}
+.ticker-sep{width:4px;height:4px;border-radius:50%;background:var(--text-3);flex-shrink:0}
+@keyframes tickerRoll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+.ticker:hover .ticker-track{animation-play-state:paused}
+
+/* SECTIONS */
+section{position:relative;z-index:1}
+.section-inner{max-width:var(--max-w);margin:0 auto;padding:120px var(--pad-x)}
+.section-eyebrow{display:flex;align-items:center;gap:14px;font-size:.7rem;font-weight:500;letter-spacing:.2em;text-transform:uppercase;color:var(--text-3);margin-bottom:20px}
+.section-eyebrow::before{content:'';width:20px;height:1px;background:var(--text-3)}
+.section-title-lg{font-family:var(--serif);font-size:clamp(2.5rem,5.5vw,5.5rem);line-height:1;letter-spacing:-.02em;color:var(--text)}
+.section-title-lg em{font-style:italic;color:var(--text-2)}
+.section-divider{width:100%;height:1px;background:var(--border);max-width:var(--max-w);margin:0 auto}
+
+/* WORKS */
+#work{background:var(--bg)}
+.works-header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:64px;flex-wrap:wrap;gap:32px}
+.filter-group{display:flex;gap:4px}
+.filter-btn{padding:8px 18px;background:transparent;border:1px solid var(--border);border-radius:100px;font-family:var(--sans);font-size:.78rem;font-weight:400;color:var(--text-2);cursor:none;transition:background .3s,color .3s,border-color .3s}
+.filter-btn:hover,.filter-btn.active{background:var(--text);color:var(--bg);border-color:var(--text)}
+
+/* Featured project */
+.featured-project{position:relative;width:100%;aspect-ratio:16/7;border-radius:16px;overflow:hidden;cursor:none;margin-bottom:24px;background:var(--dark-card)}
+.featured-project video,.featured-project img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .8s var(--ease)}
+.featured-project:hover video,.featured-project:hover img{transform:scale(1.03)}
+.featured-project-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.75) 0%,rgba(0,0,0,.1) 50%,transparent 100%);display:flex;flex-direction:column;justify-content:space-between;padding:36px}
+.feat-top{display:flex;justify-content:space-between;align-items:center}
+.feat-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;background:rgba(255,255,255,.12);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.2);border-radius:100px;font-size:.68rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.9)}
+.feat-play{width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.92);border:none;cursor:none;display:flex;align-items:center;justify-content:center;transition:transform .3s var(--snap),background .3s}
+.feat-play:hover{transform:scale(1.12);background:#fff}
+.feat-meta{font-size:.72rem;font-weight:400;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px}
+.feat-title{font-family:var(--serif);font-size:clamp(1.8rem,3.5vw,3.2rem);color:#fff;line-height:1.05;letter-spacing:-.01em}
+.feat-arrow{display:inline-flex;align-items:center;gap:10px;margin-top:16px;font-size:.8rem;color:rgba(255,255,255,.6);font-weight:400;transition:gap .3s var(--ease),color .3s}
+.featured-project:hover .feat-arrow{gap:18px;color:rgba(255,255,255,.9)}
+
+/* Project cards */
+.projects-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:20px}
+.proj-col-6{grid-column:span 6}.proj-col-4{grid-column:span 4}.proj-col-3{grid-column:span 3}
+.proj-card{position:relative;cursor:none;border-radius:12px;overflow:hidden;background:var(--dark-card);transition:transform .4s var(--ease),box-shadow .4s}
+.proj-card:hover{transform:translateY(-4px);box-shadow:0 12px 36px rgba(0,0,0,.15)}
+.proj-card-media{position:relative;width:100%;aspect-ratio:4/3;overflow:hidden}
+.proj-card-media video,.proj-card-media img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .7s var(--ease)}
+.proj-card:hover .proj-card-media video,.proj-card:hover .proj-card-media img{transform:scale(1.06)}
+.proj-card-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.6) 0%,transparent 50%);display:flex;align-items:flex-end;padding:24px;opacity:0;transition:opacity .4s var(--ease)}
+.proj-card:hover .proj-card-overlay{opacity:1}
+.proj-card-footer{padding:20px;background:var(--dark-card);border-top:1px solid rgba(255,255,255,.06)}
+.proj-card-footer-inner{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.proj-card-cat{font-size:.65rem;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:6px}
+.proj-card-title{font-family:var(--serif);font-size:1.25rem;color:rgba(255,255,255,.9);line-height:1.2}
+.proj-card-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.proj-tag{font-size:.62rem;padding:3px 10px;background:rgba(255,255,255,.06);border-radius:100px;color:rgba(255,255,255,.35);border:1px solid rgba(255,255,255,.08);letter-spacing:.03em}
+.proj-card-link{width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.8);flex-shrink:0;transition:background .3s,border-color .3s,color .3s}
+.proj-card:hover .proj-card-link{background:#fff;border-color:#fff;color:var(--text)}
+
+/* Light web cards */
+.proj-card.light{background:var(--card-bg)}
+.proj-card.light .proj-card-footer{background:var(--card-bg);border-top:1px solid var(--border)}
+.proj-card.light .proj-card-cat{color:var(--text-3)}
+.proj-card.light .proj-card-title{color:var(--text)}
+.proj-card.light .proj-tag{background:rgba(27,27,27,.05);color:var(--text-3);border-color:var(--border)}
+.proj-card.light .proj-card-link{border-color:var(--border);background:transparent;color:var(--text-2)}
+.proj-card.light:hover .proj-card-link{background:var(--text);border-color:var(--text);color:var(--bg)}
+
+/* ABOUT */
+#about{background:var(--bg)}
+.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:start}
+.about-bio{font-size:clamp(1rem,1.4vw,1.15rem);font-weight:300;color:var(--text-2);line-height:1.8;margin-top:36px}
+.about-bio strong{color:var(--text);font-weight:500}
+.about-bio p+p{margin-top:20px}
+.creds-list{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:48px}
+.cred-card{padding:24px;background:var(--card-bg);border-radius:12px;transition:transform .3s var(--ease)}
+.cred-card:hover{transform:translateY(-3px)}
+.cred-icon{font-size:1.4rem;margin-bottom:12px}
+.cred-name{font-family:var(--serif);font-size:1.3rem;color:var(--text);margin-bottom:6px}
+.cred-desc{font-size:.78rem;color:var(--text-2);line-height:1.5}
+.skills-section-title{font-size:.7rem;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:var(--text-3);margin-bottom:16px}
+.skills-wrap{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:32px}
+.skill-chip{padding:7px 16px;background:var(--bg);border:1px solid var(--border);border-radius:100px;font-size:.78rem;color:var(--text);font-weight:400;transition:background .25s,border-color .25s,transform .25s,color .25s}
+.skill-chip:hover{background:var(--text);color:var(--bg);border-color:var(--text);transform:translateY(-2px)}
+
+/* CAPABILITIES */
+#capabilities{background:var(--bg-warm)}
+.cap-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-top:64px}
+.cap-card{padding:32px 28px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);transition:background .3s var(--ease);position:relative;overflow:hidden}
+.cap-card:nth-child(4n){border-right:none}
+.cap-card:nth-last-child(-n+4){border-bottom:none}
+.cap-card:hover{background:var(--bg)}
+.cap-icon{font-size:1.4rem;margin-bottom:20px;display:block;filter:grayscale(.3);transition:filter .3s,transform .3s var(--snap)}
+.cap-card:hover .cap-icon{filter:grayscale(0);transform:scale(1.1)}
+.cap-title{font-size:.78rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text);margin-bottom:16px}
+.cap-list{list-style:none;display:flex;flex-direction:column;gap:7px}
+.cap-list li{font-size:.78rem;color:var(--text-2);line-height:1.45;padding-left:14px;position:relative;font-weight:300}
+.cap-list li::before{content:'';position:absolute;left:0;top:8px;width:5px;height:1px;background:var(--text-3)}
+
+/* CONTACT */
+#contact{background:var(--bg)}
+.contact-inner{text-align:center;max-width:900px;margin:0 auto}
+.contact-headline{font-family:var(--serif);font-size:clamp(3rem,8vw,8rem);line-height:.95;letter-spacing:-.03em;color:var(--text);margin-bottom:48px}
+.contact-headline em{font-style:italic;color:var(--text-2)}
+.contact-email-link{display:inline-flex;align-items:center;gap:14px;padding:18px 40px;background:var(--text);color:var(--bg);text-decoration:none;border-radius:100px;font-size:clamp(.95rem,1.5vw,1.2rem);font-weight:500;cursor:none;transition:background .3s,transform .35s var(--ease),box-shadow .35s;margin-bottom:60px}
+.contact-email-link:hover{background:#2d2d2d;transform:translateY(-3px);box-shadow:0 16px 48px rgba(27,27,27,.2)}
+.contact-socials{display:flex;align-items:center;justify-content:center;gap:32px;flex-wrap:wrap}
+.social-link{font-size:.82rem;color:var(--text-2);text-decoration:none;font-weight:400;letter-spacing:.03em;display:inline-flex;align-items:center;gap:8px;cursor:none;transition:color .25s;position:relative}
+.social-link::after{content:'';position:absolute;bottom:-2px;left:0;width:0;height:1px;background:var(--text);transition:width .35s var(--ease)}
+.social-link:hover{color:var(--text)}
+.social-link:hover::after{width:100%}
+
+/* FOOTER */
+footer{background:var(--bg);border-top:1px solid var(--border);padding:36px var(--pad-x);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;font-size:.78rem;color:var(--text-3);position:relative;z-index:1}
+footer em{font-family:var(--serif);font-style:italic;color:var(--text-2)}
+
+/* VIDEO MODAL */
+#video-modal{position:fixed;inset:0;background:rgba(27,27,27,.88);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);z-index:90000;display:flex;align-items:center;justify-content:center;padding:40px var(--pad-x);opacity:0;pointer-events:none;transition:opacity .4s var(--ease)}
+#video-modal.active{opacity:1;pointer-events:auto}
+.modal-wrap{width:100%;max-width:1100px;background:#111;border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,.08);transform:scale(.96) translateY(16px);transition:transform .5s var(--ease)}
+#video-modal.active .modal-wrap{transform:scale(1) translateY(0)}
+.modal-video-box{width:100%;aspect-ratio:16/9;background:#000}
+.modal-video-box video{width:100%;height:100%;object-fit:contain}
+.modal-info{padding:28px 32px;display:flex;align-items:flex-start;justify-content:space-between;gap:24px}
+.modal-title{font-family:var(--serif);font-size:1.8rem;color:rgba(255,255,255,.9);margin-bottom:6px}
+.modal-meta{font-size:.8rem;color:rgba(255,255,255,.4)}
+.modal-close{width:42px;height:42px;border-radius:50%;border:1px solid rgba(255,255,255,.15);background:transparent;color:rgba(255,255,255,.7);cursor:none;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .25s,color .25s}
+.modal-close:hover{background:rgba(255,255,255,.1);color:#fff}
+
+/* UTILITY */
+.fade-up{opacity:0;transform:translateY(24px);transition:opacity .8s var(--ease),transform .8s var(--ease)}
+.fade-up.in-view{opacity:1;transform:translateY(0)}
+.fade-in{opacity:0;transition:opacity .8s var(--ease)}
+.fade-in.in-view{opacity:1}
+[data-delay="1"]{transition-delay:.1s}[data-delay="2"]{transition-delay:.2s}[data-delay="3"]{transition-delay:.3s}[data-delay="4"]{transition-delay:.4s}[data-delay="5"]{transition-delay:.5s}
+
+/* RESPONSIVE */
+@media(max-width:1200px){.cap-grid{grid-template-columns:repeat(3,1fr)}.cap-card:nth-child(4n){border-right:1px solid var(--border)}.cap-card:nth-child(3n){border-right:none}}
+@media(max-width:1024px){.hero-top{grid-template-columns:1fr;gap:40px}.hero-right{padding-top:0}.hero-desc{max-width:100%}.about-grid{grid-template-columns:1fr;gap:48px}.proj-col-6{grid-column:span 12}.proj-col-4{grid-column:span 6}}
+@media(max-width:768px){.nav-right{display:none}.nav-hamburger{display:flex}.projects-grid{display:flex;flex-direction:column}.cap-grid{grid-template-columns:1fr 1fr}.cap-card:nth-child(3n){border-right:1px solid var(--border)}.cap-card:nth-child(2n){border-right:none}.hero-creds{gap:24px}.creds-list{grid-template-columns:1fr}.featured-project{aspect-ratio:4/3}}
+@media(max-width:480px){.cap-grid{grid-template-columns:1fr}.cap-card{border-right:none!important;border-bottom:1px solid var(--border)!important}.cap-card:last-child{border-bottom:none!important}}
+</style>
+</head>
+<body>
+
+<canvas id="dot-canvas"></canvas>
+<div id="cur-dot"></div>
+<div id="cur-ring"></div>
+<div id="scroll-bar"></div>
+
+<!-- NAV -->
+<nav id="nav">
+  <a href="#" class="nav-brand">Madhav<span>&nbsp;Kelodia</span></a>
+  <ul class="nav-right">
+    <li><a href="#work">Work</a></li>
+    <li><a href="#about">About</a></li>
+    <li><a href="#capabilities">Capabilities</a></li>
+    <li><a href="#contact" class="nav-cta">Let's Talk</a></li>
+  </ul>
+  <button class="nav-hamburger" id="nav-toggle" aria-label="Menu"><span></span><span></span><span></span></button>
+</nav>
+
+<div class="mobile-drawer" id="mobile-drawer">
+  <ul class="mobile-nav-links">
+    <li><a href="#work" onclick="closeMobile()">Work</a></li>
+    <li><a href="#about" onclick="closeMobile()">About</a></li>
+    <li><a href="#capabilities" onclick="closeMobile()">Capabilities</a></li>
+    <li><a href="#contact" onclick="closeMobile()">Contact</a></li>
+  </ul>
+</div>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-top">
+    <div class="hero-left">
+      <div class="hero-eyebrow" id="hero-eyebrow">
+        <span class="hero-pill"><span class="hero-pill-dot"></span> Available for Projects</span>
+        <span class="hero-pill">India &middot; 2026</span>
+      </div>
+      <h1 class="hero-headline" id="hero-headline">AI Filmmaker,<br>Video Editor<br><em>&amp; Web Developer</em></h1>
+    </div>
+    <div class="hero-right" id="hero-right">
+      <div class="hero-roles">
+        <div class="hero-role">AI Filmmaker &amp; Generative Cinema</div>
+        <div class="hero-role">Video Editor &mdash; ZEE5 &middot; BRB NONO'S</div>
+        <div class="hero-role">Full-Stack Web Developer</div>
+        <div class="hero-role">BIFFes Official Selection</div>
+      </div>
+      <p class="hero-desc">I tell stories through <strong>generative AI cinema</strong>, precision <strong>video editing</strong> for brands like ZEE5 &amp; BRB NONO'S, and interactive <strong>web development</strong>.</p>
+      <div class="hero-ctas">
+        <a href="#work" class="btn-primary">View Selected Work <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+        <a href="#about" class="btn-ghost">About Me</a>
+      </div>
+    </div>
+  </div>
+  <div class="hero-bottom" id="hero-bottom">
+    <div class="hero-creds">
+      <div class="hero-cred"><span class="hero-cred-val">ZEE5</span><span class="hero-cred-label">Commercial Edit</span></div>
+      <div class="hero-cred"><span class="hero-cred-val">BIFFes</span><span class="hero-cred-label">AI Selection</span></div>
+      <div class="hero-cred"><span class="hero-cred-val">BRB NONO'S</span><span class="hero-cred-label">Ad Campaign</span></div>
+      <div class="hero-cred"><span class="hero-cred-val">4+ LIVE</span><span class="hero-cred-label">Web Projects</span></div>
+    </div>
+    <div class="hero-scroll-hint"><span class="scroll-line"></span> Scroll to explore</div>
+  </div>
+</section>
+
+<!-- TICKER -->
+<div class="ticker">
+  <div class="ticker-track">
+    <span class="ticker-item">AI Filmmaker <span class="ticker-sep"></span></span>
+    <span class="ticker-item">ZEE5 Commercials <span class="ticker-sep"></span></span>
+    <span class="ticker-item">BIFFes Festival Selection <span class="ticker-sep"></span></span>
+    <span class="ticker-item">Video Editing <span class="ticker-sep"></span></span>
+    <span class="ticker-item">Web Development <span class="ticker-sep"></span></span>
+    <span class="ticker-item">Generative AI Cinema <span class="ticker-sep"></span></span>
+    <span class="ticker-item">BRB NONO'S Ad Campaign <span class="ticker-sep"></span></span>
+    <span class="ticker-item">DaVinci Resolve <span class="ticker-sep"></span></span>
+    <span class="ticker-item">React &amp; Next.js <span class="ticker-sep"></span></span>
+    <span class="ticker-item">GSAP &amp; Framer Motion <span class="ticker-sep"></span></span>
+    <span class="ticker-item">AI Filmmaker <span class="ticker-sep"></span></span>
+    <span class="ticker-item">ZEE5 Commercials <span class="ticker-sep"></span></span>
+    <span class="ticker-item">BIFFes Festival Selection <span class="ticker-sep"></span></span>
+    <span class="ticker-item">Video Editing <span class="ticker-sep"></span></span>
+    <span class="ticker-item">Web Development <span class="ticker-sep"></span></span>
+    <span class="ticker-item">Generative AI Cinema <span class="ticker-sep"></span></span>
+    <span class="ticker-item">BRB NONO'S Ad Campaign <span class="ticker-sep"></span></span>
+    <span class="ticker-item">DaVinci Resolve <span class="ticker-sep"></span></span>
+    <span class="ticker-item">React &amp; Next.js <span class="ticker-sep"></span></span>
+    <span class="ticker-item">GSAP &amp; Framer Motion <span class="ticker-sep"></span></span>
+  </div>
+</div>
+
+<!-- SELECTED WORKS -->
+<section id="work">
+  <div class="section-inner">
+    <div class="works-header fade-up">
+      <div>
+        <div class="section-eyebrow">Portfolio</div>
+        <h2 class="section-title-lg">Selected <em>Work</em></h2>
+      </div>
+      <div class="filter-group">
+        <button class="filter-btn active" data-cat="all">All</button>
+        <button class="filter-btn" data-cat="ai">AI Cinema</button>
+        <button class="filter-btn" data-cat="edit">Video Editing</button>
+        <button class="filter-btn" data-cat="web">Web Dev</button>
+      </div>
+    </div>
+
+    <!-- Featured: FIFA 2026 -->
+    <div class="featured-project fade-in" data-cat="ai" onclick="openModal('videos/fc4.mp4','FIFA 2026 &mdash; AI Generative Film','ZEE5 Commission &middot; BIFFes Official Selection &middot; AI Directing &amp; Editing')">
+      <video src="videos/fc4.mp4" autoplay loop muted playsinline></video>
+      <div class="featured-project-overlay">
+        <div class="feat-top">
+          <span class="feat-badge">&#127942; BIFFes Official Selection &middot; ZEE5</span>
+          <button class="feat-play" onclick="event.stopPropagation();openModal('videos/fc4.mp4','FIFA 2026 &mdash; AI Generative Film','ZEE5 Commission &middot; BIFFes Official Selection')"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button>
+        </div>
+        <div class="feat-bottom">
+          <div class="feat-meta">AI Cinema &middot; Generative Film &middot; 2026</div>
+          <div class="feat-title">FIFA 2026 &mdash;<br>AI Generative Film</div>
+          <div class="feat-arrow">Watch Project <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="projects-grid" id="proj-grid">
+
+      <!-- BRB NONO'S -->
+      <div class="proj-card proj-col-6 fade-up" data-cat="edit" data-delay="1" onclick="openModal('videos/project-03.mp4','BRB NON\'S Commercial Ad','Commercial Video Editing &middot; DaVinci Resolve')">
+        <div class="proj-card-media"><video src="videos/project-03.mp4" autoplay loop muted playsinline></video><div class="proj-card-overlay"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.8)" stroke-width="1.5"><path d="M8 5v14l11-7z"/></svg></div></div>
+        <div class="proj-card-footer"><div class="proj-card-footer-inner"><div><div class="proj-card-cat">Video Editing &middot; BRB NONO'S</div><div class="proj-card-title">BRB NONO'S Commercial Ad</div><div class="proj-card-tags"><span class="proj-tag">DaVinci Resolve</span><span class="proj-tag">Motion FX</span><span class="proj-tag">Commercial</span></div></div><div class="proj-card-link"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div></div></div>
+      </div>
+
+      <!-- VANISH -->
+      <div class="proj-card proj-col-6 fade-up" data-cat="edit" data-delay="2" onclick="openModal('videos/project-02.mp4','VANISH &mdash; Main Menu UI','After Effects &middot; Trapcode &middot; DaVinci Grade')">
+        <div class="proj-card-media"><video src="videos/project-02.mp4" autoplay loop muted playsinline></video><div class="proj-card-overlay"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.8)" stroke-width="1.5"><path d="M8 5v14l11-7z"/></svg></div></div>
+        <div class="proj-card-footer"><div class="proj-card-footer-inner"><div><div class="proj-card-cat">After Effects &middot; Motion FX</div><div class="proj-card-title">VANISH &mdash; Main Menu UI</div><div class="proj-card-tags"><span class="proj-tag">Trapcode</span><span class="proj-tag">After Effects</span><span class="proj-tag">DaVinci Grade</span></div></div><div class="proj-card-link"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div></div></div>
+      </div>
+
+      <!-- Cinematic Reel -->
+      <div class="proj-card proj-col-4 fade-up" data-cat="edit" data-delay="1" onclick="openModal('videos/project-01.mp4','Cinematic Reel','Cinematography &amp; Video Editing Showcase')">
+        <div class="proj-card-media"><video src="videos/project-01.mp4" autoplay loop muted playsinline></video><div class="proj-card-overlay"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.8)" stroke-width="1.5"><path d="M8 5v14l11-7z"/></svg></div></div>
+        <div class="proj-card-footer"><div class="proj-card-footer-inner"><div><div class="proj-card-cat">Cinematography</div><div class="proj-card-title">Cinematic Reel</div><div class="proj-card-tags"><span class="proj-tag">Premiere Pro</span><span class="proj-tag">Reel Edit</span></div></div><div class="proj-card-link"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div></div></div>
+      </div>
+
+      <!-- FRAMES Short -->
+      <div class="proj-card proj-col-4 fade-up" data-cat="ai" data-delay="2" onclick="openModal('videos/project-04.mp4','FRAMES &mdash; Narrative Short','Storytelling Edit &amp; Sound Architecture')">
+        <div class="proj-card-media"><video src="videos/project-04.mp4" autoplay loop muted playsinline></video><div class="proj-card-overlay"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.8)" stroke-width="1.5"><path d="M8 5v14l11-7z"/></svg></div></div>
+        <div class="proj-card-footer"><div class="proj-card-footer-inner"><div><div class="proj-card-cat">Narrative Short</div><div class="proj-card-title">FRAMES Short</div><div class="proj-card-tags"><span class="proj-tag">Premiere Pro</span><span class="proj-tag">Sound Design</span></div></div><div class="proj-card-link"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div></div></div>
+      </div>
+
+      <!-- Fast Paced Editing -->
+      <div class="proj-card proj-col-4 fade-up" data-cat="edit" data-delay="3" onclick="openModal('videos/project-05.mp4','Fast Paced Editing','Rhythm Cuts &amp; Dynamic Editing')">
+        <div class="proj-card-media"><video src="videos/project-05.mp4" autoplay loop muted playsinline></video><div class="proj-card-overlay"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.8)" stroke-width="1.5"><path d="M8 5v14l11-7z"/></svg></div></div>
+        <div class="proj-card-footer"><div class="proj-card-footer-inner"><div><div class="proj-card-cat">Video Editing</div><div class="proj-card-title">Fast Paced Editing</div><div class="proj-card-tags"><span class="proj-tag">Premiere Pro</span><span class="proj-tag">Rhythm Edit</span></div></div><div class="proj-card-link"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div></div></div>
+      </div>
+
+      <!-- Web: Draw Together -->
+      <div class="proj-card proj-col-6 light fade-up" data-cat="web" data-delay="1" onclick="window.open('https://draw-together-kohl.vercel.app/','_blank')">
+        <div class="proj-card-media"><img src="images/draw_together.png" alt="Draw Together"></div>
+        <div class="proj-card-footer"><div class="proj-card-footer-inner"><div><div class="proj-card-cat">Web App &middot; Real-Time Canvas</div><div class="proj-card-title">Draw Together</div><div class="proj-card-tags"><span class="proj-tag">React</span><span class="proj-tag">Real-Time</span><span class="proj-tag">Live &#8599;</span></div></div><a href="https://draw-together-kohl.vercel.app/" target="_blank" class="proj-card-link" onclick="event.stopPropagation()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a></div></div>
+      </div>
+
+      <!-- Web: WishDrop -->
+      <div class="proj-card proj-col-6 light fade-up" data-cat="web" data-delay="2" onclick="window.open('https://wishdrop-delta.vercel.app/','_blank')">
+        <div class="proj-card-media"><img src="images/wishdrop.png" alt="WishDrop"></div>
+        <div class="proj-card-footer"><div class="proj-card-footer-inner"><div><div class="proj-card-cat">Web Platform &middot; Wishlist Drops</div><div class="proj-card-title">WishDrop</div><div class="proj-card-tags"><span class="proj-tag">Next.js</span><span class="proj-tag">Full Stack</span><span class="proj-tag">Live &#8599;</span></div></div><a href="https://wishdrop-delta.vercel.app/" target="_blank" class="proj-card-link" onclick="event.stopPropagation()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a></div></div>
+      </div>
+
+      <!-- Web: LancerNeed -->
+      <div class="proj-card proj-col-6 light fade-up" data-cat="web" data-delay="1" onclick="window.open('https://lancerneed.vercel.app/','_blank')">
+        <div class="proj-card-media"><img src="images/lancerneed.png" alt="LancerNeed"></div>
+        <div class="proj-card-footer"><div class="proj-card-footer-inner"><div><div class="proj-card-cat">Web Platform &middot; Freelance Market</div><div class="proj-card-title">LancerNeed</div><div class="proj-card-tags"><span class="proj-tag">React</span><span class="proj-tag">Marketplace</span><span class="proj-tag">Live &#8599;</span></div></div><a href="https://lancerneed.vercel.app/" target="_blank" class="proj-card-link" onclick="event.stopPropagation()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a></div></div>
+      </div>
+
+      <!-- Web: Portfolio -->
+      <div class="proj-card proj-col-6 light fade-up" data-cat="web" data-delay="2" onclick="window.open('https://madhav-kelodia-portfolio.vercel.app/','_blank')">
+        <div class="proj-card-media"><img src="images/portfolio.png" alt="Madhav Portfolio"></div>
+        <div class="proj-card-footer"><div class="proj-card-footer-inner"><div><div class="proj-card-cat">Web Dev &middot; Developer Hub</div><div class="proj-card-title">Madhav Kelodia Portfolio</div><div class="proj-card-tags"><span class="proj-tag">GSAP</span><span class="proj-tag">Interactive UI</span><span class="proj-tag">Live &#8599;</span></div></div><a href="https://madhav-kelodia-portfolio.vercel.app/" target="_blank" class="proj-card-link" onclick="event.stopPropagation()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a></div></div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="section-inner">
+    <div class="about-grid">
+      <div class="about-left">
+        <div class="section-eyebrow fade-up">About</div>
+        <h2 class="section-title-lg fade-up" data-delay="1">Creative Vision.<br><em>Cutting-Edge Code.</em></h2>
+        <div class="about-bio fade-up" data-delay="2">
+          <p>Hey, I'm <strong>Madhav</strong> &mdash; an 18-year-old <strong>AI Filmmaker, Video Editor, and Creative Developer</strong> based in India. I sit exactly at the intersection of cinematic storytelling and modern software development.</p>
+          <p>Whether I'm in the edit suite cutting commercial promos for <strong>ZEE5</strong> and <strong>BRB NONO'S</strong>, engineering generative AI films for the <strong>Bengaluru International Film Festival (BIFFes)</strong>, or coding high-performance interactive web experiences &mdash; I obsess over every detail.</p>
+          <p>I believe the best work lives where technical precision meets artistic intuition.</p>
+        </div>
+      </div>
+      <div class="about-right fade-up" data-delay="2">
+        <div class="creds-list">
+          <div class="cred-card"><div class="cred-icon">&#127916;</div><div class="cred-name">ZEE5</div><div class="cred-desc">Commercial video editing and promo trailer cuts for India's leading OTT platform.</div></div>
+          <div class="cred-card"><div class="cred-icon">&#127871;</div><div class="cred-name">BRB NONO'S</div><div class="cred-desc">Ad campaign creation with precise pacing, motion graphics, and cinematic storytelling.</div></div>
+          <div class="cred-card"><div class="cred-icon">&#127942;</div><div class="cred-name">BIFFes</div><div class="cred-desc">Bengaluru International Film Festival official selection for generative AI short film.</div></div>
+          <div class="cred-card"><div class="cred-icon">&#128187;</div><div class="cred-name">Web &amp; Code</div><div class="cred-desc">Full-stack React apps, GSAP-driven interfaces, and real-time web experiences.</div></div>
+        </div>
+        <div class="skills-section-title">Tech Stack</div>
+        <div class="skills-wrap">
+          <span class="skill-chip">React.js</span><span class="skill-chip">Next.js</span><span class="skill-chip">Node.js</span><span class="skill-chip">JavaScript</span><span class="skill-chip">GSAP</span><span class="skill-chip">Framer Motion</span><span class="skill-chip">MongoDB</span><span class="skill-chip">Firebase</span>
+        </div>
+        <div class="skills-section-title">Creative Tools</div>
+        <div class="skills-wrap">
+          <span class="skill-chip">Premiere Pro</span><span class="skill-chip">After Effects</span><span class="skill-chip">DaVinci Resolve</span><span class="skill-chip">Runway Gen-3</span><span class="skill-chip">Midjourney</span><span class="skill-chip">Photoshop</span><span class="skill-chip">Figma</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- CAPABILITIES -->
+<section id="capabilities">
+  <div class="section-inner">
+    <div class="works-header fade-up">
+      <div>
+        <div class="section-eyebrow">Full Scope</div>
+        <h2 class="section-title-lg">What I <em>Can Do</em></h2>
+      </div>
+      <p style="max-width:380px;font-size:.9rem;color:var(--text-2);line-height:1.7;font-weight:300">From AI filmmaking and commercial editing to full-stack development, automation, and beyond.</p>
+    </div>
+    <div class="cap-grid">
+      <div class="cap-card fade-in" data-delay="1"><span class="cap-icon">&#128187;</span><div class="cap-title">Programming &amp; Dev</div><ul class="cap-list"><li>Full-stack apps (React, Next.js, Node, Express, MongoDB)</li><li>Debug Java, Python, JavaScript, C++</li><li>REST APIs &amp; backend systems</li><li>AI-powered apps &amp; automations</li><li>Git, Docker, Linux &amp; deployment</li><li>Performance optimization</li></ul></div>
+      <div class="cap-card fade-in" data-delay="2"><span class="cap-icon">&#127912;</span><div class="cap-title">UI/UX &amp; Web Design</div><ul class="cap-list"><li>Modern, editorial websites</li><li>Interactive portfolio sites</li><li>Figma layouts &amp; prototypes</li><li>GSAP, Framer Motion &amp; Lenis</li><li>Landing pages &amp; dashboards</li><li>Responsive, mobile-first</li></ul></div>
+      <div class="cap-card fade-in" data-delay="3"><span class="cap-icon">&#127916;</span><div class="cap-title">Video Editing</div><ul class="cap-list"><li>Adobe Premiere Pro</li><li>AutoCut &amp; AutoPod workflows</li><li>DaVinci Resolve editing</li><li>Motion graphics &amp; transitions</li><li>Viral reel editing</li><li>Audio cleanup &amp; export</li></ul></div>
+      <div class="cap-card fade-in" data-delay="4"><span class="cap-icon">&#128444;&#65039;</span><div class="cap-title">AI Image &amp; Video</div><ul class="cap-list"><li>Image generation prompts</li><li>AI video generation prompts</li><li>Character consistency</li><li>Storyboard scenes</li><li>Cinematic camera movements</li><li>Prompt optimization</li></ul></div>
+      <div class="cap-card fade-in" data-delay="1"><span class="cap-icon">&#129302;</span><div class="cap-title">Automation</div><ul class="cap-list"><li>n8n workflows</li><li>Python automation scripts</li><li>Email &amp; web scraping</li><li>Google Sheets automation</li><li>AI agent workflows</li><li>Social media automation</li></ul></div>
+      <div class="cap-card fade-in" data-delay="2"><span class="cap-icon">&#128241;</span><div class="cap-title">Mobile Apps</div><ul class="cap-list"><li>Flutter development</li><li>React Native</li><li>Firebase integration</li><li>UI design &amp; architecture</li><li>Play Store publishing</li></ul></div>
+      <div class="cap-card fade-in" data-delay="3"><span class="cap-icon">&#127918;</span><div class="cap-title">Game Development</div><ul class="cap-list"><li>Godot &amp; Unity</li><li>Unreal Engine basics</li><li>2D asset planning</li><li>Game mechanics design</li><li>AI prompts for game assets</li></ul></div>
+      <div class="cap-card fade-in" data-delay="4"><span class="cap-icon">&#128200;</span><div class="cap-title">Business &amp; Startups</div><ul class="cap-list"><li>Startup idea validation</li><li>MVP planning &amp; roadmaps</li><li>Monetization strategies</li><li>Pitch decks</li><li>SaaS ideas</li></ul></div>
+      <div class="cap-card fade-in" data-delay="1"><span class="cap-icon">&#128248;</span><div class="cap-title">Photo Editing</div><ul class="cap-list"><li>Photoshop editing</li><li>Object removal</li><li>Retouching &amp; color correction</li><li>Background replacement</li><li>AI upscaling prompts</li></ul></div>
+      <div class="cap-card fade-in" data-delay="2"><span class="cap-icon">&#128396;&#65039;</span><div class="cap-title">Graphic Design</div><ul class="cap-list"><li>Posters &amp; thumbnails</li><li>Social media posts</li><li>Brand identity</li><li>Packaging concepts</li><li>Typography advice</li></ul></div>
+      <div class="cap-card fade-in" data-delay="3"><span class="cap-icon">&#9997;&#65039;</span><div class="cap-title">Writing</div><ul class="cap-list"><li>Emails, blogs &amp; scripts</li><li>Product descriptions</li><li>Captions &amp; docs</li><li>Technical writing</li></ul></div>
+      <div class="cap-card fade-in" data-delay="4"><span class="cap-icon">&#129504;</span><div class="cap-title">Brainstorming</div><ul class="cap-list"><li>Content ideas &amp; YouTube concepts</li><li>Startup names &amp; features</li><li>Marketing campaigns</li><li>Workflow improvements</li></ul></div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="section-inner">
+    <div class="contact-inner">
+      <div class="section-eyebrow fade-up" style="justify-content:center">Let's Work Together</div>
+      <h2 class="contact-headline fade-up" data-delay="1">Let's <em>Create</em><br>Something Great</h2>
+      <div class="fade-up" data-delay="2">
+        <a href="mailto:kelodiamadhav@gmail.com" class="contact-email-link">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          kelodiamadhav@gmail.com
+        </a>
+      </div>
+      <div class="contact-socials fade-up" data-delay="3">
+        <a href="https://www.instagram.com/melltros_/" target="_blank" rel="noopener" class="social-link">Instagram <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>
+        <a href="https://www.youtube.com/@Melltros" target="_blank" rel="noopener" class="social-link">YouTube <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>
+        <a href="https://www.linkedin.com/in/madhav-kelodia-5260ba354/" target="_blank" rel="noopener" class="social-link">LinkedIn <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>
+        <a href="mailto:kelodiamadhav@gmail.com" class="social-link">Email <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div>&copy; 2026 Madhav Kelodia &mdash; <em>AI Filmmaker &middot; Creative Developer &middot; Video Editor</em></div>
+  <div style="font-style:italic;font-family:var(--serif);color:var(--text-2)">"Craft everything with intention."</div>
+</footer>
+
+<!-- VIDEO MODAL -->
+<div id="video-modal">
+  <div class="modal-wrap">
+    <div class="modal-video-box"><video id="modal-player" controls playsinline></video></div>
+    <div class="modal-info">
+      <div><div class="modal-title" id="modal-title">Project</div><div class="modal-meta" id="modal-meta">Details</div></div>
+      <button class="modal-close" id="modal-close" aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+  </div>
+</div>
+
+<!-- SCRIPTS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.23/dist/lenis.min.js"></script>
+
+<script>
+/* ===== 1. INTERACTIVE DOT CANVAS ===== */
+(function(){
+  const canvas=document.getElementById('dot-canvas');
+  if(!canvas) return;
+  const ctx=canvas.getContext('2d');
+  let dots=[],mouse={x:-9999,y:-9999};
+  const SP=28,RAD=140;
+  const SHAPES=['circle','capsule','diamond','triangle','plus','star','square','cross'];
+  const PAL=['#93C5FD','#6EE7B7','#A5B4FC','#F9A8D4','#FBD38D','#FCA5A5','#86EFAC','#67E8F9','#C4B5FD','#FCD34D','#FDBA74','#6FDDCC'];
+
+  function resize(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;build()}
+  function build(){
+    dots=[];
+    const cols=Math.floor(canvas.width/SP)+2,rows=Math.floor(canvas.height/SP)+2;
+    const ox=(canvas.width%SP)/2,oy=(canvas.height%SP)/2;
+    for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
+      dots.push({x:ox+c*SP,y:oy+r*SP,scale:0,shape:SHAPES[Math.floor(Math.random()*SHAPES.length)],color:PAL[Math.floor(Math.random()*PAL.length)],rot:Math.random()*Math.PI*2});
+    }
+  }
+  window.addEventListener('mousemove',e=>{mouse.x=e.clientX;mouse.y=e.clientY});
+  document.addEventListener('mouseleave',()=>{mouse.x=-9999;mouse.y=-9999});
+  window.addEventListener('resize',resize);
+
+  function drawShape(s,sz){
+    switch(s){
+      case'circle':ctx.beginPath();ctx.arc(0,0,sz,0,Math.PI*2);ctx.fill();break;
+      case'capsule':{const w=sz*2.2,h=sz*.85;ctx.beginPath();if(ctx.roundRect)ctx.roundRect(-w/2,-h/2,w,h,h/2);else ctx.rect(-w/2,-h/2,w,h);ctx.fill();break}
+      case'diamond':ctx.beginPath();ctx.moveTo(0,-sz*1.3);ctx.lineTo(sz*.75,0);ctx.lineTo(0,sz*1.3);ctx.lineTo(-sz*.75,0);ctx.closePath();ctx.fill();break;
+      case'triangle':ctx.beginPath();ctx.moveTo(0,-sz);ctx.lineTo(sz*.87,sz*.5);ctx.lineTo(-sz*.87,sz*.5);ctx.closePath();ctx.fill();break;
+      case'plus':case'cross':{const t=sz*.32;ctx.fillRect(-t,-sz,t*2,sz*2);ctx.fillRect(-sz,-t,sz*2,t*2);break}
+      case'star':starP(5,sz,sz*.4);ctx.fill();break;
+      case'square':{const hs=sz*.82;ctx.fillRect(-hs,-hs,hs*2,hs*2);break}
+    }
+  }
+  function starP(spikes,outer,inner){
+    let rot=-Math.PI/2;const step=Math.PI/spikes;ctx.beginPath();
+    for(let i=0;i<spikes;i++){ctx.lineTo(Math.cos(rot)*outer,Math.sin(rot)*outer);rot+=step;ctx.lineTo(Math.cos(rot)*inner,Math.sin(rot)*inner);rot+=step}
+    ctx.closePath();
+  }
+
+  function frame(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    const mx=mouse.x,my=mouse.y;
+    for(const d of dots){
+      const dx=d.x-mx,dy=d.y-my,dist=Math.sqrt(dx*dx+dy*dy);
+      const t=Math.max(0,1-dist/RAD),ease=t*t*(3-2*t);
+      d.scale+=(ease-d.scale)*.11;
+      ctx.save();ctx.translate(d.x,d.y);
+      if(d.scale>.04){
+        ctx.globalAlpha=Math.min(1,d.scale*1.8);ctx.fillStyle=d.color;
+        const size=3+d.scale*8;ctx.rotate(d.rot+d.scale*.4);drawShape(d.shape,size);ctx.globalAlpha=1;
+      }
+      ctx.globalAlpha=(1-d.scale)*.55+.1;ctx.fillStyle='#BDB9B1';ctx.beginPath();ctx.arc(0,0,1.5,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
+      ctx.restore();
+    }
+    requestAnimationFrame(frame);
+  }
+  resize();frame();
+})();
+
+/* ===== 2. CUSTOM CURSOR ===== */
+(function(){
+  const dot=document.getElementById('cur-dot'),ring=document.getElementById('cur-ring');
+  if(!dot || !ring) return;
+  let rx=0,ry=0,mx=0,my=0;
+  if(!window.matchMedia('(pointer:fine)').matches)return;
+  window.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY});
+  function loop(){rx+=(mx-rx)*.14;ry+=(my-ry)*.14;dot.style.left=mx+'px';dot.style.top=my+'px';ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(loop)}loop();
+  document.querySelectorAll('a,button,[onclick],.filter-btn,.proj-card,.feat-play,.featured-project,.skill-chip,.cred-card,.social-link,.nav-cta').forEach(el=>{
+    el.addEventListener('mouseenter',()=>document.body.classList.add('cur-hover'));
+    el.addEventListener('mouseleave',()=>document.body.classList.remove('cur-hover'));
+  });
+})();
+
+/* ===== 3. LENIS SMOOTH SCROLL (SAFE WRAPPER) ===== */
+try {
+  if (typeof Lenis !== 'undefined') {
+    const lenis = new Lenis({lerp:0.09,smoothWheel:true});
+    if (typeof ScrollTrigger !== 'undefined') {
+      lenis.on('scroll', ScrollTrigger.update);
+    }
+    if (typeof gsap !== 'undefined') {
+      gsap.ticker.add(time => lenis.raf(time * 1000));
+      gsap.ticker.lagSmoothing(0);
+    }
+  }
+} catch(e) { console.warn('Lenis failed to initialize:', e); }
+
+/* ===== 4. NAV SCROLL ===== */
+window.addEventListener('scroll',()=>{
+  const navEl = document.getElementById('nav');
+  if(navEl) navEl.classList.toggle('scrolled',window.scrollY>40);
+  const sbEl = document.getElementById('scroll-bar');
+  if(sbEl) sbEl.style.width=((window.scrollY/(document.body.scrollHeight-window.innerHeight))*100)+'%';
+},{passive:true});
+
+/* ===== 5. MOBILE MENU ===== */
+const navToggle = document.getElementById('nav-toggle');
+if(navToggle) {
+  navToggle.addEventListener('click',()=>{
+    const drawer = document.getElementById('mobile-drawer');
+    if(drawer) drawer.classList.toggle('open');
+  });
+}
+function closeMobile(){
+  const drawer = document.getElementById('mobile-drawer');
+  if(drawer) drawer.classList.remove('open');
+}
+
+/* ===== 6. HERO ENTRY (DYNAMIC ANIMATION) ===== */
+window.addEventListener('DOMContentLoaded',()=>{
+  if (typeof gsap !== 'undefined') {
+    if (typeof ScrollTrigger !== 'undefined') gsap.registerPlugin(ScrollTrigger);
+    const tl=gsap.timeline({delay:.1});
+    tl.from('#hero-eyebrow',{opacity:0,y:16,duration:.8,ease:'power3.out'})
+      .from('#hero-headline',{opacity:0,y:24,duration:.9,ease:'power4.out'},'-=.5')
+      .from('#hero-right',{opacity:0,y:16,duration:.8,ease:'power3.out'},'-=.5')
+      .from('#hero-bottom',{opacity:0,y:12,duration:.7,ease:'power3.out'},'-=.3');
+  }
+});
+
+/* ===== 7. FILTER TABS ===== */
+document.querySelectorAll('.filter-btn').forEach(btn=>{
+  btn.addEventListener('click',function(){
+    document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+    this.classList.add('active');
+    const cat=this.dataset.cat;
+    document.querySelectorAll('[data-cat]').forEach(card=>{
+      const show=cat==='all'||card.dataset.cat===cat;
+      if (show) {
+        card.style.display = '';
+        card.style.opacity = '1';
+        card.style.transform = 'scale(1)';
+        card.style.pointerEvents = 'auto';
+      } else {
+        card.style.opacity = '0';
+        card.style.transform = 'scale(0.95)';
+        card.style.pointerEvents = 'none';
+        setTimeout(() => {
+          if (card.style.opacity === '0') card.style.display = 'none';
+        }, 300);
+      }
+    });
+  });
+});
+
+/* ===== 8. VIDEO MODAL ===== */
+const modal=document.getElementById('video-modal'),player=document.getElementById('modal-player');
+function openModal(src,title,meta){
+  if(!player || !modal) return;
+  player.src=src;
+  const mt = document.getElementById('modal-title');
+  const mm = document.getElementById('modal-meta');
+  if(mt) mt.textContent=title;
+  if(mm) mm.textContent=meta;
+  modal.classList.add('active');
+  player.play().catch(()=>{});
+  document.body.style.overflow='hidden';
+}
+function closeModal(){
+  if(!player || !modal) return;
+  modal.classList.remove('active');
+  player.pause();
+  player.src='';
+  document.body.style.overflow='';
+}
+const mc = document.getElementById('modal-close');
+if(mc) mc.addEventListener('click',closeModal);
+if(modal) modal.addEventListener('click',e=>{if(e.target===modal)closeModal()});
+window.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+
+/* ===== 9. SCROLL ANIMATIONS (INTERSECTION OBSERVER) ===== */
+window.addEventListener('DOMContentLoaded', () => {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('in-view');
+        // Optional: Stop observing once revealed
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+  document.querySelectorAll('.fade-up, .fade-in').forEach(el => observer.observe(el));
+});
+</script>
+</body>
+</html>

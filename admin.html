@@ -28,8 +28,12 @@ h1{font-size:1rem;font-weight:600}
 .sidebar{width:360px;max-width:100%;background:#111;border-right:1px solid #222;display:flex;flex-direction:column;flex-shrink:0}
 .sidebar-head{padding:14px 16px;border-bottom:1px solid #222}
 .sidebar-head label{font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:#666;display:block;margin-bottom:6px}
-.filter-row{display:flex;gap:8px}
+.filter-row{display:flex;gap:8px;margin-bottom:8px}
 .filter-row select,.filter-row input{flex:1;background:#0d0d0d;border:1px solid #333;color:#eee;border-radius:8px;padding:8px 10px;font-size:.82rem}
+.stats{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+.stat{flex:1;min-width:70px;background:#0d0d0d;border:1px solid #222;border-radius:8px;padding:8px 10px;text-align:center}
+.stat-val{font-size:1rem;font-weight:600;color:#6ee7b7}
+.stat-label{font-size:.62rem;color:#666;text-transform:uppercase;letter-spacing:.06em;margin-top:2px}
 .sidebar-scroll{flex:1;overflow:auto;padding:8px}
 .time-group{margin-bottom:16px}
 .time-group-title{font-size:.68rem;text-transform:uppercase;letter-spacing:.1em;color:#555;padding:8px 10px 6px;position:sticky;top:0;background:#111;z-index:1}
@@ -48,7 +52,7 @@ h1{font-size:1rem;font-weight:600}
 
 .map-wrap{flex:1;position:relative;min-width:0}
 #map{position:absolute;inset:0}
-.detail-panel{position:absolute;top:12px;right:12px;width:min(320px,calc(100% - 24px));background:rgba(17,17,17,.94);backdrop-filter:blur(12px);border:1px solid #333;border-radius:12px;padding:16px;z-index:1000;display:none;box-shadow:0 8px 32px rgba(0,0,0,.4)}
+.detail-panel{position:absolute;top:12px;right:12px;width:min(320px,calc(100% - 24px));max-height:calc(100% - 24px);overflow:auto;background:rgba(17,17,17,.94);backdrop-filter:blur(12px);border:1px solid #333;border-radius:12px;padding:16px;z-index:1000;display:none;box-shadow:0 8px 32px rgba(0,0,0,.4)}
 .detail-panel.open{display:block}
 .detail-panel h3{font-size:.95rem;margin-bottom:10px;line-height:1.3}
 .detail-row{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid #222;font-size:.78rem}
@@ -85,7 +89,9 @@ h1{font-size:1rem;font-weight:600}
     <div class="meta">
       <span id="count">0</span> visits
       <button type="button" id="test-loc" class="blue">Capture my location</button>
+      <button type="button" id="export-btn">Export</button>
       <button type="button" id="refresh">Refresh</button>
+      <button type="button" id="auto-refresh" class="muted">Auto: Off</button>
       <button type="button" id="logout" class="muted">Logout</button>
     </div>
   </header>
@@ -104,6 +110,22 @@ h1{font-size:1rem;font-weight:600}
           </select>
           <input type="date" id="date-pick" title="Pick a specific date">
         </div>
+        <label style="margin-top:10px">Device &amp; search</label>
+        <div class="filter-row">
+          <select id="device-filter">
+            <option value="all">All devices</option>
+            <option value="mobile">Mobile</option>
+            <option value="tablet">Tablet</option>
+            <option value="desktop">Desktop</option>
+          </select>
+          <input type="search" id="search-box" placeholder="Search address or device">
+        </div>
+        <div class="stats" id="stats">
+          <div class="stat"><div class="stat-val" id="stat-total">0</div><div class="stat-label">Total</div></div>
+          <div class="stat"><div class="stat-val" id="stat-mobile">0</div><div class="stat-label">Mobile</div></div>
+          <div class="stat"><div class="stat-val" id="stat-desktop">0</div><div class="stat-label">Desktop</div></div>
+          <div class="stat"><div class="stat-val" id="stat-gps">0</div><div class="stat-label">GPS</div></div>
+        </div>
       </div>
       <div class="sidebar-scroll" id="sidebar-list"></div>
     </aside>
@@ -117,6 +139,8 @@ h1{font-size:1rem;font-weight:600}
         <div class="detail-row"><span>Accuracy</span><span id="detail-acc">—</span></div>
         <div class="detail-row"><span>Time</span><span id="detail-time">—</span></div>
         <div class="detail-row"><span>Source</span><span id="detail-src">—</span></div>
+        <div class="detail-row mono"><span>IP address</span><span id="detail-ip">—</span></div>
+        <div class="detail-row"><span>Page</span><span id="detail-page">—</span></div>
         <div class="detail-section">Device</div>
         <div class="detail-row"><span>Device</span><span id="detail-device">—</span></div>
         <div class="detail-row"><span>Model source</span><span id="detail-model-src">—</span></div>
@@ -129,6 +153,7 @@ h1{font-size:1rem;font-weight:600}
         <div class="detail-actions">
           <a id="detail-gmaps" href="#" target="_blank" rel="noopener">Open in Maps</a>
           <button type="button" id="detail-copy">Copy coords</button>
+          <button type="button" id="detail-copy-device">Copy device</button>
         </div>
       </div>
     </div>
@@ -138,7 +163,7 @@ h1{font-size:1rem;font-weight:600}
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="js/device-info.js"></script>
 <script>
-let map, markers = [], circles = [], allLocations = [], selectedId = null;
+let map, markers = [], circles = [], allLocations = [], selectedId = null, autoRefreshTimer = null;
 
 function fmtCoord(n) {
   return typeof n === 'number' ? n.toFixed(7) : '—';
@@ -176,24 +201,53 @@ function groupLabel(iso) {
 function passesFilter(loc) {
   const filter = document.getElementById('time-filter').value;
   const datePick = document.getElementById('date-pick').value;
+  const deviceFilter = document.getElementById('device-filter').value;
+  const search = document.getElementById('search-box').value.trim().toLowerCase();
   const t = new Date(loc.receivedAt);
   const now = new Date();
 
   if (datePick) {
     const picked = new Date(datePick + 'T00:00:00');
-    return startOfDay(t).getTime() === startOfDay(picked).getTime();
-  }
-
-  if (filter === 'all') return true;
-  if (filter === 'today') return startOfDay(t).getTime() === startOfDay(now).getTime();
-  if (filter === 'yesterday') {
+    if (startOfDay(t).getTime() !== startOfDay(picked).getTime()) return false;
+  } else if (filter === 'today' && startOfDay(t).getTime() !== startOfDay(now).getTime()) return false;
+  else if (filter === 'yesterday') {
     const y = new Date(now);
     y.setDate(y.getDate() - 1);
-    return startOfDay(t).getTime() === startOfDay(y).getTime();
+    if (startOfDay(t).getTime() !== startOfDay(y).getTime()) return false;
+  } else if (filter === 'week' && now - t > 7 * 24 * 60 * 60 * 1000) return false;
+  else if (filter === 'month' && now - t > 30 * 24 * 60 * 60 * 1000) return false;
+
+  if (deviceFilter !== 'all') {
+    const type = loc.device?.type || 'unknown';
+    if (type !== deviceFilter) return false;
   }
-  if (filter === 'week') return now - t <= 7 * 24 * 60 * 60 * 1000;
-  if (filter === 'month') return now - t <= 30 * 24 * 60 * 60 * 1000;
+
+  if (search) {
+    const hay = [
+      loc.address,
+      loc.ip,
+      deviceSummary(loc),
+      loc.device?.model,
+      loc.device?.os,
+      loc.device?.browser,
+      loc.page,
+    ].filter(Boolean).join(' ').toLowerCase();
+    if (!hay.includes(search)) return false;
+  }
+
   return true;
+}
+
+function getFilteredLocations() {
+  return allLocations.filter(passesFilter);
+}
+
+function updateStats() {
+  const filtered = getFilteredLocations();
+  document.getElementById('stat-total').textContent = filtered.length;
+  document.getElementById('stat-mobile').textContent = filtered.filter(l => l.device?.type === 'mobile').length;
+  document.getElementById('stat-desktop').textContent = filtered.filter(l => l.device?.type === 'desktop').length;
+  document.getElementById('stat-gps').textContent = filtered.filter(l => l.source === 'gps').length;
 }
 
 function showDashboard() {
@@ -265,6 +319,8 @@ function selectLocation(loc) {
   document.getElementById('detail-acc').textContent = loc.accuracy != null ? `±${Math.round(loc.accuracy)} meters` : 'N/A (IP estimate)';
   document.getElementById('detail-time').textContent = fmtTime(loc.receivedAt);
   document.getElementById('detail-src').textContent = loc.source === 'gps' ? 'GPS (pinpoint)' : 'IP (approximate)';
+  document.getElementById('detail-ip').textContent = loc.ip || '—';
+  document.getElementById('detail-page').textContent = loc.page || '—';
   fillDeviceDetails(loc);
   document.getElementById('detail-gmaps').href =
     `https://www.google.com/maps?q=${loc.lat},${loc.lng}&z=19`;
@@ -278,7 +334,8 @@ function selectLocation(loc) {
 }
 
 function renderSidebar(locations) {
-  const filtered = locations.filter(passesFilter);
+  const filtered = getFilteredLocations();
+  updateStats();
   const listEl = document.getElementById('sidebar-list');
 
   if (!filtered.length) {
@@ -315,9 +372,9 @@ function renderSidebar(locations) {
   });
 }
 
-function renderMap(locations) {
+function renderMap() {
   clearMapLayers();
-  const filtered = locations.filter(passesFilter);
+  const filtered = getFilteredLocations();
   const bounds = [];
 
   filtered.forEach(loc => {
@@ -356,7 +413,7 @@ function renderMap(locations) {
 
 function renderAll() {
   renderSidebar(allLocations);
-  renderMap(allLocations);
+  renderMap();
   if (selectedId) {
     const loc = allLocations.find(l => l.id === selectedId);
     if (loc && passesFilter(loc)) selectLocation(loc);
@@ -457,6 +514,64 @@ async function captureMyLocation() {
   }
 }
 
+function exportVisits(format) {
+  const rows = getFilteredLocations();
+  if (!rows.length) {
+    alert('No visits to export for current filters.');
+    return;
+  }
+
+  let content, mime, filename;
+  if (format === 'csv') {
+    const headers = ['time', 'lat', 'lng', 'accuracy', 'address', 'source', 'ip', 'device', 'os', 'browser', 'screen', 'page'];
+    const escape = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    content = [
+      headers.join(','),
+      ...rows.map(loc => [
+        loc.receivedAt,
+        loc.lat,
+        loc.lng,
+        loc.accuracy ?? '',
+        loc.address ?? '',
+        loc.source ?? '',
+        loc.ip ?? '',
+        loc.device?.model ?? '',
+        loc.device?.os ?? '',
+        loc.device?.browser ?? '',
+        loc.device?.screen ?? '',
+        loc.page ?? '',
+      ].map(escape).join(','))
+    ].join('\n');
+    mime = 'text/csv';
+    filename = `visits-${new Date().toISOString().slice(0, 10)}.csv`;
+  } else {
+    content = JSON.stringify(rows, null, 2);
+    mime = 'application/json';
+    filename = `visits-${new Date().toISOString().slice(0, 10)}.json`;
+  }
+
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function toggleAutoRefresh() {
+  const btn = document.getElementById('auto-refresh');
+  if (autoRefreshTimer) {
+    clearInterval(autoRefreshTimer);
+    autoRefreshTimer = null;
+    btn.textContent = 'Auto: Off';
+    return;
+  }
+  autoRefreshTimer = setInterval(loadLocations, 30000);
+  btn.textContent = 'Auto: 30s';
+  loadLocations();
+}
+
 document.getElementById('time-filter').addEventListener('change', () => {
   document.getElementById('date-pick').value = '';
   selectedId = null;
@@ -466,6 +581,18 @@ document.getElementById('time-filter').addEventListener('change', () => {
 
 document.getElementById('date-pick').addEventListener('change', (e) => {
   if (e.target.value) document.getElementById('time-filter').value = 'all';
+  selectedId = null;
+  document.getElementById('detail-panel').classList.remove('open');
+  renderAll();
+});
+
+document.getElementById('device-filter').addEventListener('change', () => {
+  selectedId = null;
+  document.getElementById('detail-panel').classList.remove('open');
+  renderAll();
+});
+
+document.getElementById('search-box').addEventListener('input', () => {
   selectedId = null;
   document.getElementById('detail-panel').classList.remove('open');
   renderAll();
@@ -488,8 +615,29 @@ document.getElementById('detail-copy').addEventListener('click', () => {
   });
 });
 
-document.getElementById('test-loc').addEventListener('click', captureMyLocation);
+document.getElementById('detail-copy-device').addEventListener('click', () => {
+  const text = [
+    document.getElementById('detail-device').textContent,
+    document.getElementById('detail-os').textContent,
+    document.getElementById('detail-browser').textContent,
+    document.getElementById('detail-screen').textContent,
+  ].filter(v => v && v !== '—').join(' · ');
+  if (!text) return;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('detail-copy-device');
+    btn.textContent = 'Copied!';
+    setTimeout(() => { btn.textContent = 'Copy device'; }, 1500);
+  });
+});
+
+document.getElementById('export-btn').addEventListener('click', () => {
+  const format = confirm('Export as CSV? (Cancel for JSON)') ? 'csv' : 'json';
+  exportVisits(format);
+});
+
+document.getElementById('auto-refresh').addEventListener('click', toggleAutoRefresh);
 document.getElementById('refresh').addEventListener('click', loadLocations);
+document.getElementById('test-loc').addEventListener('click', captureMyLocation);
 document.getElementById('logout').addEventListener('click', () => {
   sessionStorage.removeItem('adminKey');
   location.reload();

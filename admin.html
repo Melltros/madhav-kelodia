@@ -119,6 +119,7 @@ h1{font-size:1rem;font-weight:600}
         <div class="detail-row"><span>Source</span><span id="detail-src">—</span></div>
         <div class="detail-section">Device</div>
         <div class="detail-row"><span>Device</span><span id="detail-device">—</span></div>
+        <div class="detail-row"><span>Model source</span><span id="detail-model-src">—</span></div>
         <div class="detail-row"><span>OS</span><span id="detail-os">—</span></div>
         <div class="detail-row"><span>Browser</span><span id="detail-browser">—</span></div>
         <div class="detail-row"><span>Screen</span><span id="detail-screen">—</span></div>
@@ -225,7 +226,15 @@ function deviceSummary(loc) {
 function fillDeviceDetails(loc) {
   const d = loc.device || {};
   document.getElementById('detail-device').textContent =
-    [d.model, d.type ? d.type.charAt(0).toUpperCase() + d.type.slice(1) : ''].filter(Boolean).join(' · ') || '—';
+    d.model || [d.type ? d.type.charAt(0).toUpperCase() + d.type.slice(1) : ''].filter(Boolean).join(' · ') || '—';
+  const srcLabels = {
+    'client-hints': 'Exact (browser API)',
+    'screen-fingerprint': 'iPhone screen match',
+    'android-ua': 'Android UA string',
+    'user-agent': 'User-Agent guess',
+  };
+  document.getElementById('detail-model-src').textContent =
+    srcLabels[d.modelSource] || d.modelSource || '—';
   document.getElementById('detail-os').textContent = d.os || '—';
   document.getElementById('detail-browser').textContent = d.browser || '—';
   document.getElementById('detail-screen').textContent = d.screen
@@ -435,7 +444,7 @@ async function captureMyLocation() {
       speed: pos.coords.speed,
       address,
       source: 'gps', page: 'admin-test',
-      device: getDeviceInfo()
+      device: await getDeviceInfoAsync()
     });
     btn.textContent = 'Saved!';
     await loadLocations();

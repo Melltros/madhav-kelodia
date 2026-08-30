@@ -1,4 +1,43 @@
 (function (global) {
+  // Common Samsung model codes → marketing names
+  const SAMSUNG_MODELS = {
+    'SM-S928B': 'Samsung Galaxy S24 Ultra',
+    'SM-S926B': 'Samsung Galaxy S24+',
+    'SM-S921B': 'Samsung Galaxy S24',
+    'SM-S918B': 'Samsung Galaxy S23 Ultra',
+    'SM-S916B': 'Samsung Galaxy S23+',
+    'SM-S911B': 'Samsung Galaxy S23',
+    'SM-G998B': 'Samsung Galaxy S21 Ultra',
+    'SM-G996B': 'Samsung Galaxy S21+',
+    'SM-G991B': 'Samsung Galaxy S21',
+    'SM-A546B': 'Samsung Galaxy A54',
+    'SM-A536B': 'Samsung Galaxy A53',
+    'SM-A346B': 'Samsung Galaxy A34',
+    'SM-A146B': 'Samsung Galaxy A14',
+    'SM-F946B': 'Samsung Galaxy Z Fold5',
+    'SM-F731B': 'Samsung Galaxy Z Flip5',
+  };
+
+  // iPhone screen fingerprint → model (CSS pixels @ pixel ratio)
+  const IPHONE_SCREENS = {
+    '320x568@2': 'iPhone SE / 5 / 5s',
+    '375x667@2': 'iPhone 6 / 7 / 8 / SE 2 / SE 3',
+    '375x812@3': 'iPhone X / XS / 11 Pro / 12 mini / 13 mini',
+    '390x844@3': 'iPhone 12 / 13 / 14',
+    '393x852@3': 'iPhone 14 Pro / 15 / 15 Pro',
+    '402x874@3': 'iPhone 16 Pro',
+    '414x736@3': 'iPhone 6 Plus / 7 Plus / 8 Plus',
+    '414x896@2': 'iPhone XR / 11',
+    '414x896@3': 'iPhone XS Max / 11 Pro Max',
+    '428x926@3': 'iPhone 12 Pro Max / 13 Pro Max / 14 Plus',
+    '430x932@3': 'iPhone 14 Pro Max / 15 Plus / 15 Pro Max',
+    '440x956@3': 'iPhone 16 Pro Max',
+    '768x1024@2': 'iPad Mini / iPad',
+    '810x1080@2': 'iPad Air',
+    '834x1194@2': 'iPad Pro 11"',
+    '1024x1366@2': 'iPad Pro 12.9"',
+  };
+
   function detectOS(ua) {
     if (/Windows NT 10/.test(ua)) return 'Windows 10/11';
     if (/Windows NT/i.test(ua)) return 'Windows';
@@ -54,42 +93,129 @@
     return 'desktop';
   }
 
-  function detectModel(ua, type) {
-    if (/iPhone/.test(ua)) return 'iPhone';
-    if (/iPad/.test(ua)) return 'iPad';
-    if (/Pixel ([\w ]+)/i.test(ua)) {
-      const m = ua.match(/Pixel ([\w ]+)/i);
-      return 'Google Pixel ' + (m ? m[1].trim() : '');
+  function normalizeModelName(raw) {
+    if (!raw) return null;
+    const trimmed = raw.trim();
+    if (!trimmed || trimmed === 'K' || trimmed === 'Linux') return null;
+
+    const upper = trimmed.toUpperCase();
+    if (SAMSUNG_MODELS[upper]) return SAMSUNG_MODELS[upper];
+    if (/^SM-/.test(upper)) return 'Samsung ' + trimmed;
+
+    return trimmed;
+  }
+
+  function detectAndroidModelFromUA(ua) {
+    // Android 14; Pixel 8 Pro Build/...
+    // Android 14; SM-G991B Build/...
+    // Android 14; Redmi Note 12 Build/...
+    const patterns = [
+      /Android [\d.]+;\s*([^;)]+?)\s+Build\//i,
+      /Android [\d.]+;\s*([^;)]+?)\s*;/i,
+      /;\s*([^;)]+)\s+Build\//i,
+    ];
+    for (const re of patterns) {
+      const m = ua.match(re);
+      if (m) {
+        const name = normalizeModelName(m[1]);
+        if (name) return name;
+      }
     }
-    if (/SM-[\w]+/.test(ua)) {
-      const m = ua.match(/SM-[\w]+/);
-      return 'Samsung ' + m[0];
+    return null;
+  }
+
+  function detectiPhoneModelFromScreen() {
+    const w = Math.min(screen.width, screen.height);
+    const h = Math.max(screen.width, screen.height);
+    const key = `${w}x${h}@${window.devicePixelRatio || 1}`;
+    return IPHONE_SCREENS[key] || null;
+  }
+
+  async function fetchClientHintsModel() {
+    try {
+      if (!navigator.userAgentData?.getHighEntropyValues) return null;
+      const hints = await navigator.userAgentData.getHighEntropyValues([
+        'model',
+        'platform',
+        'platformVersion',
+        'mobile',
+      ]);
+      if (hints.model) {
+        return {
+          model: normalizeModelName(hints.model) || hints.model,
+          platformVersion: hints.platformVersion || null,
+          source: 'client-hints',
+        };
+      }
+    } catch (e) { /* blocked or unsupported */ }
+    return null;
+  }
+
+  function detectModelFromUA(ua, type) {
+    if (/iPhone/.test(ua)) {
+      return detectiPhoneModelFromScreen() || 'iPhone';
     }
-    if (/Redmi|Mi [\w ]+/i.test(ua)) {
-      const m = ua.match(/Redmi [\w ]+|Mi [\w ]+/i);
-      return m ? m[0].trim() : 'Xiaomi';
+    if (/iPod/.test(ua)) return 'iPod touch';
+    if (/iPad/.test(ua)) {
+      return detectiPhoneModelFromScreen() || 'iPad';
     }
-    if (/OnePlus[\w ]*/i.test(ua)) {
+
+    const android = detectAndroidModelFromUA(ua);
+    if (android) return android;
+
+    if (/Pixel/i.test(ua)) {
+      const m = ua.match(/Pixel [\w ]+/i);
+      if (m) return m[0].trim();
+    }
+    if (/OnePlus/i.test(ua)) {
       const m = ua.match(/OnePlus[\w ]*/i);
-      return m ? m[0].trim() : 'OnePlus';
+      if (m) return m[0].trim();
     }
-    if (type === 'desktop') return 'Desktop/Laptop';
+    if (/Redmi|POCO|Mi [\w ]+/i.test(ua)) {
+      const m = ua.match(/Redmi [\w ]+|POCO [\w ]+|Mi [\w ]+/i);
+      if (m) return m[0].trim();
+    }
+    if (/vivo/i.test(ua)) {
+      const m = ua.match(/vivo [\w ]+/i);
+      if (m) return m[0].trim();
+    }
+    if (/OPPO/i.test(ua)) {
+      const m = ua.match(/OPPO[\w ]+/i);
+      if (m) return m[0].trim();
+    }
+    if (/Realme/i.test(ua)) {
+      const m = ua.match(/Realme[\w ]+/i);
+      if (m) return m[0].trim();
+    }
+    if (/Motorola|moto/i.test(ua)) {
+      const m = ua.match(/moto[\w ]+|Motorola[\w ]+/i);
+      if (m) return m[0].trim();
+    }
+    if (/Nokia/i.test(ua)) {
+      const m = ua.match(/Nokia[\w ]+/i);
+      if (m) return m[0].trim();
+    }
+    if (/HUAWEI|Huawei/i.test(ua)) {
+      const m = ua.match(/HUAWEI[\w-]+|Huawei[\w-]+/i);
+      if (m) return m[0].trim();
+    }
+
+    if (type === 'desktop') return 'Desktop / Laptop';
     return type === 'tablet' ? 'Tablet' : 'Mobile';
   }
 
-  function getDeviceInfo() {
-    const ua = navigator.userAgent || '';
-    const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-    const type = detectDeviceType(ua);
+  function buildDeviceInfo(ua, type, model, modelSource, extra) {
     const os = detectOS(ua);
     const browser = detectBrowser(ua);
-    const model = detectModel(ua, type);
+    const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
 
     const info = {
       type,
       os,
       browser,
       model,
+      modelSource: modelSource || 'user-agent',
+      modelCode: extra?.modelCode || null,
       platform: navigator.platform || '',
       language: navigator.language || '',
       languages: (navigator.languages || []).join(', '),
@@ -116,12 +242,42 @@
     return info;
   }
 
+  function getDeviceInfo() {
+    const ua = navigator.userAgent || '';
+    const type = detectDeviceType(ua);
+    const model = detectModelFromUA(ua, type);
+    return buildDeviceInfo(ua, type, model, 'user-agent');
+  }
+
+  async function getDeviceInfoAsync() {
+    const ua = navigator.userAgent || '';
+    const type = detectDeviceType(ua);
+
+    const hints = await fetchClientHintsModel();
+    if (hints?.model) {
+      return buildDeviceInfo(ua, type, hints.model, 'client-hints', {
+        modelCode: hints.model,
+      });
+    }
+
+    const uaModel = detectModelFromUA(ua, type);
+    const source = /iPhone|iPad/.test(ua) && detectiPhoneModelFromScreen()
+      ? 'screen-fingerprint'
+      : detectAndroidModelFromUA(ua)
+        ? 'android-ua'
+        : 'user-agent';
+
+    return buildDeviceInfo(ua, type, uaModel, source);
+  }
+
   function deviceLabel(device) {
     if (!device) return 'Unknown device';
+    if (device.model) return `${device.model} · ${device.os || ''} · ${device.browser || ''}`.replace(/\s·\s$/, '');
     if (device.summary) return device.summary;
     return [device.model, device.os, device.browser].filter(Boolean).join(' · ') || 'Unknown device';
   }
 
   global.getDeviceInfo = getDeviceInfo;
+  global.getDeviceInfoAsync = getDeviceInfoAsync;
   global.deviceLabel = deviceLabel;
 })(typeof window !== 'undefined' ? window : globalThis);

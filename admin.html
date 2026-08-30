@@ -43,7 +43,7 @@ h1{font-size:1.1rem;font-weight:600}
 <div id="dashboard" style="display:none">
   <header>
     <h1>Visitor Locations</h1>
-    <div class="meta"><span id="count">0</span> visits · <button id="refresh" style="background:none;border:none;color:#6ee7b7;cursor:pointer">Refresh</button> · <button id="logout" style="background:none;border:none;color:#888;cursor:pointer">Logout</button></div>
+    <div class="meta"><span id="count">0</span> visits · <button id="test-loc" style="background:none;border:none;color:#93c5fd;cursor:pointer">Capture my location</button> · <button id="refresh" style="background:none;border:none;color:#6ee7b7;cursor:pointer">Refresh</button> · <button id="logout" style="background:none;border:none;color:#888;cursor:pointer">Logout</button></div>
   </header>
   <div id="warn" class="warn" style="display:none"></div>
   <div id="map"></div>
@@ -120,6 +120,68 @@ async function loadLocations() {
 
   if (bounds.length) map.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
 }
+
+async function captureMyLocation() {
+  const btn = document.getElementById('test-loc');
+  btn.textContent = 'Getting location…';
+  btn.disabled = true;
+
+  async function save(payload) {
+    const res = await fetch('/api/locations', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data.message || data.error || `Save failed (${res.status})`);
+    }
+  }
+
+  try {
+    if (navigator.geolocation) {
+      await new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 15000,
+          maximumAge: 0
+        });
+      }).then(async (pos) => {
+        const { latitude, longitude, accuracy } = pos.coords;
+        let address = '';
+        try {
+          const r = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`,
+            { headers: { 'Accept-Language': 'en' } }
+          );
+          const d = await r.json();
+          address = d.display_name || '';
+        } catch (e) { /* ignore */ }
+        await save({
+          lat: latitude,
+          lng: longitude,
+          accuracy,
+          address,
+          source: 'gps',
+          page: 'admin-test',
+          userAgent: navigator.userAgent
+        });
+      });
+    } else {
+      throw new Error('Geolocation not supported');
+    }
+    btn.textContent = 'Saved! Refreshing…';
+    await loadLocations();
+    btn.textContent = 'Capture my location';
+  } catch (err) {
+    alert('Could not save location: ' + err.message);
+    btn.textContent = 'Capture my location';
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+document.getElementById('test-loc').addEventListener('click', captureMyLocation);
 
 document.getElementById('unlock').addEventListener('click', async () => {
   const key = document.getElementById('secret').value.trim();

@@ -23,7 +23,8 @@ You'll see a map and list of every visit with coordinates, address, accuracy, an
    | Name | Value |
    |------|--------|
    | `ADMIN_SECRET` | A strong password only you know (for `/admin`) |
-   | `BLOB_READ_WRITE_TOKEN` | Create in Vercel → Storage → Blob → Connect to project |
+   | `BLOB_STORE_ID` | Auto-added when you connect Blob (new Vercel setup) |
+   | `BLOB_READ_WRITE_TOKEN` | Optional legacy token; OIDC + `BLOB_STORE_ID` is enough |
 
 3. Redeploy after adding env vars.
 

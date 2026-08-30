@@ -1,4 +1,8 @@
-const { put, list } = require('@vercel/blob');
+const { put, list, get } = require('@vercel/blob');
+
+function blobReady() {
+  return Boolean(process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_STORE_ID);
+}
 
 async function parseBody(req) {
   if (req.body) {
@@ -18,6 +22,13 @@ async function parseBody(req) {
   });
 }
 
+async function readPrivateBlob(pathname) {
+  const result = await get(pathname, { access: 'private' });
+  if (!result || result.statusCode !== 200 || !result.stream) return null;
+  const text = await new Response(result.stream).text();
+  return JSON.parse(text);
+}
+
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -27,13 +38,13 @@ module.exports = async (req, res) => {
     return res.status(200).end();
   }
 
-  const blobReady = Boolean(process.env.BLOB_READ_WRITE_TOKEN);
+  const storageReady = blobReady();
 
   if (req.method === 'POST') {
-    if (!blobReady) {
+    if (!storageReady) {
       return res.status(503).json({
         error: 'Storage not configured',
-        message: 'Add Vercel Blob storage and redeploy. Locations cannot be saved yet.',
+        message: 'Connect Vercel Blob storage to this project and redeploy.',
       });
     }
 
@@ -70,22 +81,21 @@ module.exports = async (req, res) => {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    if (!blobReady) {
+    if (!storageReady) {
       return res.status(200).json({
         locations: [],
         blobConfigured: false,
-        message: 'BLOB_READ_WRITE_TOKEN is missing. Connect Blob in Vercel → Storage, then redeploy.',
+        message: 'Blob storage is not connected. Add Blob in Vercel Storage and redeploy.',
       });
     }
 
     try {
       const { blobs } = await list({ prefix: 'locations/' });
-      const locations = await Promise.all(
-        blobs.map(async (blob) => {
-          const response = await fetch(blob.url);
-          return response.json();
-        })
-      );
+      const locations = (
+        await Promise.all(
+          blobs.map((blob) => readPrivateBlob(blob.pathname))
+        )
+      ).filter(Boolean);
 
       locations.sort(
         (a, b) => new Date(b.receivedAt) - new Date(a.receivedAt)

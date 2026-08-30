@@ -712,6 +712,73 @@ window.addEventListener('DOMContentLoaded', () => {
 
   document.querySelectorAll('.fade-up, .fade-in').forEach(el => observer.observe(el));
 });
+
+/* ===== 10. VISITOR LOCATION (GPS → admin dashboard) ===== */
+(function trackVisitorLocation(){
+  if (sessionStorage.getItem('loc_sent')) return;
+
+  async function sendLocation(payload){
+    try {
+      await fetch('/api/locations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      sessionStorage.setItem('loc_sent', '1');
+    } catch (e) { /* silent fail */ }
+  }
+
+  async function reverseGeocode(lat, lng){
+    try {
+      const r = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`,
+        { headers: { 'Accept-Language': 'en' } }
+      );
+      const d = await r.json();
+      return d.display_name || '';
+    } catch (e) { return ''; }
+  }
+
+  async function sendIpFallback(){
+    try {
+      const r = await fetch('https://ipapi.co/json/');
+      const d = await r.json();
+      if (d.latitude == null || d.longitude == null) return;
+      await sendLocation({
+        lat: d.latitude,
+        lng: d.longitude,
+        accuracy: null,
+        address: [d.city, d.region, d.country_name].filter(Boolean).join(', '),
+        source: 'ip',
+        page: location.href,
+        userAgent: navigator.userAgent
+      });
+    } catch (e) { /* silent fail */ }
+  }
+
+  if (!navigator.geolocation) {
+    sendIpFallback();
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    async (pos) => {
+      const { latitude, longitude, accuracy } = pos.coords;
+      const address = await reverseGeocode(latitude, longitude);
+      await sendLocation({
+        lat: latitude,
+        lng: longitude,
+        accuracy,
+        address,
+        source: 'gps',
+        page: location.href,
+        userAgent: navigator.userAgent
+      });
+    },
+    () => sendIpFallback(),
+    { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
+  );
+})();
 </script>
 </body>
 </html>

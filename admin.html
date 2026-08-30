@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Visitor Locations — Admin</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,sans-serif;background:#111;color:#eee;min-height:100vh}
+header{padding:20px 24px;border-bottom:1px solid #333;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+h1{font-size:1.1rem;font-weight:600}
+.meta{font-size:.85rem;color:#888}
+#map{height:calc(100vh - 140px);width:100%}
+#login{max-width:420px;margin:20vh auto;padding:32px;background:#1a1a1a;border-radius:12px;border:1px solid #333}
+#login h2{margin-bottom:8px;font-size:1.25rem}
+#login p{color:#888;font-size:.9rem;margin-bottom:20px;line-height:1.5}
+#login input{width:100%;padding:12px 14px;border-radius:8px;border:1px solid #444;background:#0d0d0d;color:#fff;margin-bottom:12px}
+#login button{width:100%;padding:12px;border:none;border-radius:8px;background:#fff;color:#111;font-weight:600;cursor:pointer}
+#login button:hover{background:#ddd}
+#error{color:#f87171;font-size:.85rem;margin-bottom:12px;display:none}
+.list{padding:16px 24px 24px;max-height:140px;overflow:auto;border-top:1px solid #333}
+.item{padding:10px 0;border-bottom:1px solid #222;font-size:.82rem;line-height:1.5}
+.item strong{color:#fff}
+.badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:.7rem;margin-left:8px}
+.badge.gps{background:#065f46;color:#6ee7b7}
+.badge.ip{background:#1e3a5f;color:#93c5fd}
+.empty{color:#666;padding:24px;text-align:center}
+</style>
+</head>
+<body>
+
+<div id="login">
+  <h2>Admin Access</h2>
+  <p>Enter your admin secret (set as <code>ADMIN_SECRET</code> in Vercel) to view visitor locations.</p>
+  <div id="error">Invalid secret. Try again.</div>
+  <input type="password" id="secret" placeholder="Admin secret" autocomplete="off">
+  <button type="button" id="unlock">View Locations</button>
+</div>
+
+<div id="dashboard" style="display:none">
+  <header>
+    <h1>Visitor Locations</h1>
+    <div class="meta"><span id="count">0</span> visits · <button id="refresh" style="background:none;border:none;color:#6ee7b7;cursor:pointer">Refresh</button> · <button id="logout" style="background:none;border:none;color:#888;cursor:pointer">Logout</button></div>
+  </header>
+  <div id="map"></div>
+  <div class="list" id="list"></div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+let map, markers = [];
+
+function showDashboard() {
+  document.getElementById('login').style.display = 'none';
+  document.getElementById('dashboard').style.display = 'block';
+  if (!map) {
+    map = L.map('map').setView([20.5937, 78.9629], 5);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap'
+    }).addTo(map);
+  }
+}
+
+async function loadLocations() {
+  const key = sessionStorage.getItem('adminKey');
+  if (!key) return;
+
+  const res = await fetch(`/api/locations?key=${encodeURIComponent(key)}`);
+  if (res.status === 401) {
+    sessionStorage.removeItem('adminKey');
+    location.reload();
+    return;
+  }
+
+  const locations = await res.json();
+  document.getElementById('count').textContent = locations.length;
+
+  markers.forEach(m => map.removeLayer(m));
+  markers = [];
+
+  const listEl = document.getElementById('list');
+  if (!locations.length) {
+    listEl.innerHTML = '<div class="empty">No locations yet. Visit your main site and allow GPS permission.</div>';
+    return;
+  }
+
+  listEl.innerHTML = locations.map(loc => {
+    const type = loc.source === 'gps' ? 'gps' : 'ip';
+    const label = loc.source === 'gps' ? 'GPS' : 'IP estimate';
+    const when = new Date(loc.receivedAt).toLocaleString();
+    const addr = loc.address || `${loc.lat?.toFixed(5)}, ${loc.lng?.toFixed(5)}`;
+    return `<div class="item"><strong>${addr}</strong><span class="badge ${type}">${label}</span><br>${when}${loc.accuracy ? ` · ±${Math.round(loc.accuracy)}m` : ''}${loc.page ? `<br><span style="color:#666">${loc.page}</span>` : ''}</div>`;
+  }).join('');
+
+  const bounds = [];
+  locations.forEach(loc => {
+    if (typeof loc.lat !== 'number' || typeof loc.lng !== 'number') return;
+    const marker = L.marker([loc.lat, loc.lng]).addTo(map);
+    marker.bindPopup(`<b>${loc.address || 'Location'}</b><br>${new Date(loc.receivedAt).toLocaleString()}<br>Source: ${loc.source}${loc.accuracy ? `<br>Accuracy: ±${Math.round(loc.accuracy)}m` : ''}`);
+    markers.push(marker);
+    bounds.push([loc.lat, loc.lng]);
+  });
+
+  if (bounds.length) map.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
+}
+
+document.getElementById('unlock').addEventListener('click', async () => {
+  const key = document.getElementById('secret').value.trim();
+  if (!key) return;
+  sessionStorage.setItem('adminKey', key);
+  const res = await fetch(`/api/locations?key=${encodeURIComponent(key)}`);
+  if (res.status === 401) {
+    sessionStorage.removeItem('adminKey');
+    document.getElementById('error').style.display = 'block';
+    return;
+  }
+  document.getElementById('error').style.display = 'none';
+  showDashboard();
+  await loadLocations();
+});
+
+document.getElementById('refresh').addEventListener('click', loadLocations);
+document.getElementById('logout').addEventListener('click', () => {
+  sessionStorage.removeItem('adminKey');
+  location.reload();
+});
+
+if (sessionStorage.getItem('adminKey')) {
+  showDashboard();
+  loadLocations();
+}
+</script>
+</body>
+</html>

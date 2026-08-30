@@ -714,6 +714,9 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 /* ===== 10. VISITOR LOCATION (GPS → admin dashboard) ===== */
+</script>
+<script src="js/device-info.js"></script>
+<script>
 (function trackVisitorLocation(){
   if (sessionStorage.getItem('loc_sent')) return;
 
@@ -753,7 +756,7 @@ window.addEventListener('DOMContentLoaded', () => {
         address: [d.city, d.region, d.country_name].filter(Boolean).join(', '),
         source: 'ip',
         page: location.href,
-        userAgent: navigator.userAgent
+        device: getDeviceInfo()
       });
     } catch (e) { /* silent fail */ }
   }
@@ -778,7 +781,7 @@ window.addEventListener('DOMContentLoaded', () => {
           address,
           source: 'gps',
           page: location.href,
-          userAgent: navigator.userAgent
+          device: getDeviceInfo()
         });
       },
       () => sendIpFallback(),

@@ -39,6 +39,7 @@ h1{font-size:1rem;font-weight:600}
 .loc-time{font-size:.72rem;color:#6ee7b7;margin-bottom:4px;font-variant-numeric:tabular-nums}
 .loc-addr{font-size:.84rem;color:#fff;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .loc-coords{font-size:.72rem;color:#666;margin-top:6px;font-family:ui-monospace,monospace}
+.loc-device{font-size:.72rem;color:#93c5fd;margin-top:4px;line-height:1.35}
 .badge{display:inline-block;padding:2px 7px;border-radius:999px;font-size:.62rem;margin-left:6px;vertical-align:middle}
 .badge.gps{background:#065f46;color:#6ee7b7}
 .badge.ip{background:#1e3a5f;color:#93c5fd}
@@ -53,7 +54,9 @@ h1{font-size:1rem;font-weight:600}
 .detail-row{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid #222;font-size:.78rem}
 .detail-row:last-of-type{border-bottom:none}
 .detail-row span:first-child{color:#666;flex-shrink:0}
-.detail-row span:last-child{text-align:right;color:#eee;font-family:ui-monospace,monospace;word-break:break-all}
+.detail-row span:last-child{text-align:right;color:#eee;word-break:break-all}
+.detail-row.mono span:last-child{font-family:ui-monospace,monospace}
+.detail-section{font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:#555;margin:14px 0 6px;padding-top:10px;border-top:1px solid #222}
 .detail-actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
 .detail-actions a,.detail-actions button{flex:1;min-width:120px;padding:9px 12px;border-radius:8px;border:1px solid #333;background:#1a1a1a;color:#eee;text-decoration:none;text-align:center;font-size:.78rem}
 .detail-actions a:hover,.detail-actions button:hover{background:#262626}
@@ -109,11 +112,19 @@ h1{font-size:1rem;font-weight:600}
       <div class="detail-panel" id="detail-panel">
         <button class="detail-close" id="detail-close" aria-label="Close">&times;</button>
         <h3 id="detail-addr">Location</h3>
-        <div class="detail-row"><span>Latitude</span><span id="detail-lat">—</span></div>
-        <div class="detail-row"><span>Longitude</span><span id="detail-lng">—</span></div>
+        <div class="detail-row mono"><span>Latitude</span><span id="detail-lat">—</span></div>
+        <div class="detail-row mono"><span>Longitude</span><span id="detail-lng">—</span></div>
         <div class="detail-row"><span>Accuracy</span><span id="detail-acc">—</span></div>
         <div class="detail-row"><span>Time</span><span id="detail-time">—</span></div>
         <div class="detail-row"><span>Source</span><span id="detail-src">—</span></div>
+        <div class="detail-section">Device</div>
+        <div class="detail-row"><span>Device</span><span id="detail-device">—</span></div>
+        <div class="detail-row"><span>OS</span><span id="detail-os">—</span></div>
+        <div class="detail-row"><span>Browser</span><span id="detail-browser">—</span></div>
+        <div class="detail-row"><span>Screen</span><span id="detail-screen">—</span></div>
+        <div class="detail-row"><span>Language</span><span id="detail-lang">—</span></div>
+        <div class="detail-row"><span>Timezone</span><span id="detail-tz">—</span></div>
+        <div class="detail-row"><span>Connection</span><span id="detail-conn">—</span></div>
         <div class="detail-actions">
           <a id="detail-gmaps" href="#" target="_blank" rel="noopener">Open in Maps</a>
           <button type="button" id="detail-copy">Copy coords</button>
@@ -124,6 +135,7 @@ h1{font-size:1rem;font-weight:600}
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="js/device-info.js"></script>
 <script>
 let map, markers = [], circles = [], allLocations = [], selectedId = null;
 
@@ -204,6 +216,32 @@ function clearMapLayers() {
   circles = [];
 }
 
+function deviceSummary(loc) {
+  if (loc.device) return deviceLabel(loc.device);
+  if (loc.userAgent) return loc.userAgent.slice(0, 60) + (loc.userAgent.length > 60 ? '…' : '');
+  return 'Unknown device';
+}
+
+function fillDeviceDetails(loc) {
+  const d = loc.device || {};
+  document.getElementById('detail-device').textContent =
+    [d.model, d.type ? d.type.charAt(0).toUpperCase() + d.type.slice(1) : ''].filter(Boolean).join(' · ') || '—';
+  document.getElementById('detail-os').textContent = d.os || '—';
+  document.getElementById('detail-browser').textContent = d.browser || '—';
+  document.getElementById('detail-screen').textContent = d.screen
+    ? `${d.screen}${d.viewport ? ` (view ${d.viewport})` : ''}${d.pixelRatio ? ` · ${d.pixelRatio}x` : ''}`
+    : '—';
+  document.getElementById('detail-lang').textContent =
+    [d.language, d.languages].filter(Boolean).join(' · ') || '—';
+  document.getElementById('detail-tz').textContent = d.timezone || '—';
+  const connParts = [];
+  if (d.connection?.effectiveType) connParts.push(d.connection.effectiveType.toUpperCase());
+  if (d.connection?.downlinkMbps != null) connParts.push(`${d.connection.downlinkMbps} Mbps`);
+  if (d.cores) connParts.push(`${d.cores} cores`);
+  if (d.memoryGB) connParts.push(`${d.memoryGB} GB RAM`);
+  document.getElementById('detail-conn').textContent = connParts.join(' · ') || '—';
+}
+
 function selectLocation(loc) {
   selectedId = loc.id;
   document.querySelectorAll('.loc-item').forEach(el => {
@@ -218,6 +256,7 @@ function selectLocation(loc) {
   document.getElementById('detail-acc').textContent = loc.accuracy != null ? `±${Math.round(loc.accuracy)} meters` : 'N/A (IP estimate)';
   document.getElementById('detail-time').textContent = fmtTime(loc.receivedAt);
   document.getElementById('detail-src').textContent = loc.source === 'gps' ? 'GPS (pinpoint)' : 'IP (approximate)';
+  fillDeviceDetails(loc);
   document.getElementById('detail-gmaps').href =
     `https://www.google.com/maps?q=${loc.lat},${loc.lng}&z=19`;
 
@@ -252,6 +291,7 @@ function renderSidebar(locations) {
         <div class="loc-item${loc.id === selectedId ? ' active' : ''}" data-id="${loc.id}">
           <div class="loc-time">${fmtTimeShort(loc.receivedAt)}<span class="badge ${loc.source === 'gps' ? 'gps' : 'ip'}">${loc.source === 'gps' ? 'GPS' : 'IP'}</span></div>
           <div class="loc-addr">${loc.address || 'No address'}</div>
+          <div class="loc-device">${deviceSummary(loc)}</div>
           <div class="loc-coords">${fmtCoord(loc.lat)}, ${fmtCoord(loc.lng)}</div>
         </div>
       `).join('')}
@@ -292,6 +332,7 @@ function renderMap(locations) {
       <code>${fmtCoord(loc.lat)}, ${fmtCoord(loc.lng)}</code><br>
       ${fmtTime(loc.receivedAt)}<br>
       ${loc.accuracy ? `Accuracy: ±${Math.round(loc.accuracy)}m<br>` : ''}
+      <b>Device:</b> ${deviceSummary(loc)}<br>
       <a href="https://www.google.com/maps?q=${loc.lat},${loc.lng}&z=19" target="_blank">Open pinpoint in Maps</a>
     `);
     marker.on('click', () => selectLocation(loc));
@@ -393,7 +434,8 @@ async function captureMyLocation() {
       heading: pos.coords.heading,
       speed: pos.coords.speed,
       address,
-      source: 'gps', page: 'admin-test', userAgent: navigator.userAgent
+      source: 'gps', page: 'admin-test',
+      device: getDeviceInfo()
     });
     btn.textContent = 'Saved!';
     await loadLocations();

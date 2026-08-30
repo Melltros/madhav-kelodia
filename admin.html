@@ -7,27 +7,63 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:system-ui,-apple-system,sans-serif;background:#111;color:#eee;min-height:100vh}
-header{padding:20px 24px;border-bottom:1px solid #333;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
-h1{font-size:1.1rem;font-weight:600}
-.meta{font-size:.85rem;color:#888}
-#map{height:calc(100vh - 140px);width:100%}
+body{font-family:system-ui,-apple-system,sans-serif;background:#0a0a0a;color:#eee;height:100vh;overflow:hidden}
+button{font:inherit;cursor:pointer}
+header{padding:14px 18px;border-bottom:1px solid #222;background:#111;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0}
+h1{font-size:1rem;font-weight:600}
+.meta{font-size:.78rem;color:#888;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.meta button{background:none;border:none;color:#6ee7b7;padding:0}
+.meta button.muted{color:#888}
+.meta button.blue{color:#93c5fd}
+
 #login{max-width:420px;margin:20vh auto;padding:32px;background:#1a1a1a;border-radius:12px;border:1px solid #333}
 #login h2{margin-bottom:8px;font-size:1.25rem}
 #login p{color:#888;font-size:.9rem;margin-bottom:20px;line-height:1.5}
 #login input{width:100%;padding:12px 14px;border-radius:8px;border:1px solid #444;background:#0d0d0d;color:#fff;margin-bottom:12px}
-#login button{width:100%;padding:12px;border:none;border-radius:8px;background:#fff;color:#111;font-weight:600;cursor:pointer}
-#login button:hover{background:#ddd}
+#login button{width:100%;padding:12px;border:none;border-radius:8px;background:#fff;color:#111;font-weight:600}
 #error{color:#f87171;font-size:.85rem;margin-bottom:12px;display:none}
-.list{padding:16px 24px 24px;max-height:140px;overflow:auto;border-top:1px solid #333}
-.item{padding:10px 0;border-bottom:1px solid #222;font-size:.82rem;line-height:1.5}
-.item strong{color:#fff}
-.badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:.7rem;margin-left:8px}
+
+#dashboard{display:none;flex-direction:column;height:100vh}
+.layout{display:flex;flex:1;min-height:0}
+.sidebar{width:360px;max-width:100%;background:#111;border-right:1px solid #222;display:flex;flex-direction:column;flex-shrink:0}
+.sidebar-head{padding:14px 16px;border-bottom:1px solid #222}
+.sidebar-head label{font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:#666;display:block;margin-bottom:6px}
+.filter-row{display:flex;gap:8px}
+.filter-row select,.filter-row input{flex:1;background:#0d0d0d;border:1px solid #333;color:#eee;border-radius:8px;padding:8px 10px;font-size:.82rem}
+.sidebar-scroll{flex:1;overflow:auto;padding:8px}
+.time-group{margin-bottom:16px}
+.time-group-title{font-size:.68rem;text-transform:uppercase;letter-spacing:.1em;color:#555;padding:8px 10px 6px;position:sticky;top:0;background:#111;z-index:1}
+.loc-item{padding:12px 14px;border-radius:10px;border:1px solid transparent;cursor:pointer;transition:background .2s,border-color .2s;margin-bottom:4px}
+.loc-item:hover{background:#1a1a1a}
+.loc-item.active{background:#172554;border-color:#2563eb}
+.loc-time{font-size:.72rem;color:#6ee7b7;margin-bottom:4px;font-variant-numeric:tabular-nums}
+.loc-addr{font-size:.84rem;color:#fff;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.loc-coords{font-size:.72rem;color:#666;margin-top:6px;font-family:ui-monospace,monospace}
+.badge{display:inline-block;padding:2px 7px;border-radius:999px;font-size:.62rem;margin-left:6px;vertical-align:middle}
 .badge.gps{background:#065f46;color:#6ee7b7}
 .badge.ip{background:#1e3a5f;color:#93c5fd}
-.empty{color:#666;padding:24px;text-align:center}
-.warn{background:#422006;border:1px solid #92400e;color:#fcd34d;padding:14px 18px;margin:16px 24px 0;border-radius:8px;font-size:.85rem;line-height:1.6}
-.warn code{background:#1a1a1a;padding:2px 6px;border-radius:4px}
+.empty{color:#666;padding:24px 16px;text-align:center;font-size:.85rem;line-height:1.6}
+.warn{background:#422006;border:1px solid #92400e;color:#fcd34d;padding:12px 16px;margin:12px;border-radius:8px;font-size:.82rem;line-height:1.5}
+
+.map-wrap{flex:1;position:relative;min-width:0}
+#map{position:absolute;inset:0}
+.detail-panel{position:absolute;top:12px;right:12px;width:min(320px,calc(100% - 24px));background:rgba(17,17,17,.94);backdrop-filter:blur(12px);border:1px solid #333;border-radius:12px;padding:16px;z-index:1000;display:none;box-shadow:0 8px 32px rgba(0,0,0,.4)}
+.detail-panel.open{display:block}
+.detail-panel h3{font-size:.95rem;margin-bottom:10px;line-height:1.3}
+.detail-row{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid #222;font-size:.78rem}
+.detail-row:last-of-type{border-bottom:none}
+.detail-row span:first-child{color:#666;flex-shrink:0}
+.detail-row span:last-child{text-align:right;color:#eee;font-family:ui-monospace,monospace;word-break:break-all}
+.detail-actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.detail-actions a,.detail-actions button{flex:1;min-width:120px;padding:9px 12px;border-radius:8px;border:1px solid #333;background:#1a1a1a;color:#eee;text-decoration:none;text-align:center;font-size:.78rem}
+.detail-actions a:hover,.detail-actions button:hover{background:#262626}
+.detail-close{position:absolute;top:10px;right:10px;background:none;border:none;color:#666;font-size:1.1rem;line-height:1;padding:4px}
+
+@media(max-width:900px){
+  .layout{flex-direction:column-reverse}
+  .sidebar{width:100%;max-height:42vh;border-right:none;border-top:1px solid #222}
+  .map-wrap{min-height:58vh}
+}
 </style>
 </head>
 <body>
@@ -40,28 +76,244 @@ h1{font-size:1.1rem;font-weight:600}
   <button type="button" id="unlock">View Locations</button>
 </div>
 
-<div id="dashboard" style="display:none">
+<div id="dashboard">
   <header>
     <h1>Visitor Locations</h1>
-    <div class="meta"><span id="count">0</span> visits · <button id="test-loc" style="background:none;border:none;color:#93c5fd;cursor:pointer">Capture my location</button> · <button id="refresh" style="background:none;border:none;color:#6ee7b7;cursor:pointer">Refresh</button> · <button id="logout" style="background:none;border:none;color:#888;cursor:pointer">Logout</button></div>
+    <div class="meta">
+      <span id="count">0</span> visits
+      <button type="button" id="test-loc" class="blue">Capture my location</button>
+      <button type="button" id="refresh">Refresh</button>
+      <button type="button" id="logout" class="muted">Logout</button>
+    </div>
   </header>
   <div id="warn" class="warn" style="display:none"></div>
-  <div id="map"></div>
-  <div class="list" id="list"></div>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="sidebar-head">
+        <label>Filter by time</label>
+        <div class="filter-row">
+          <select id="time-filter">
+            <option value="all">All time</option>
+            <option value="today">Today</option>
+            <option value="yesterday">Yesterday</option>
+            <option value="week">Last 7 days</option>
+            <option value="month">Last 30 days</option>
+          </select>
+          <input type="date" id="date-pick" title="Pick a specific date">
+        </div>
+      </div>
+      <div class="sidebar-scroll" id="sidebar-list"></div>
+    </aside>
+    <div class="map-wrap">
+      <div id="map"></div>
+      <div class="detail-panel" id="detail-panel">
+        <button class="detail-close" id="detail-close" aria-label="Close">&times;</button>
+        <h3 id="detail-addr">Location</h3>
+        <div class="detail-row"><span>Latitude</span><span id="detail-lat">—</span></div>
+        <div class="detail-row"><span>Longitude</span><span id="detail-lng">—</span></div>
+        <div class="detail-row"><span>Accuracy</span><span id="detail-acc">—</span></div>
+        <div class="detail-row"><span>Time</span><span id="detail-time">—</span></div>
+        <div class="detail-row"><span>Source</span><span id="detail-src">—</span></div>
+        <div class="detail-actions">
+          <a id="detail-gmaps" href="#" target="_blank" rel="noopener">Open in Maps</a>
+          <button type="button" id="detail-copy">Copy coords</button>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-let map, markers = [];
+let map, markers = [], circles = [], allLocations = [], selectedId = null;
+
+function fmtCoord(n) {
+  return typeof n === 'number' ? n.toFixed(7) : '—';
+}
+
+function fmtTime(iso) {
+  const d = new Date(iso);
+  return d.toLocaleString(undefined, {
+    weekday: 'short', year: 'numeric', month: 'short',
+    day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit'
+  });
+}
+
+function fmtTimeShort(iso) {
+  const d = new Date(iso);
+  return d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+
+function startOfDay(d) {
+  const x = new Date(d);
+  x.setHours(0, 0, 0, 0);
+  return x;
+}
+
+function groupLabel(iso) {
+  const d = startOfDay(new Date(iso));
+  const today = startOfDay(new Date());
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  if (+d === +today) return 'Today';
+  if (+d === +yesterday) return 'Yesterday';
+  return d.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+}
+
+function passesFilter(loc) {
+  const filter = document.getElementById('time-filter').value;
+  const datePick = document.getElementById('date-pick').value;
+  const t = new Date(loc.receivedAt);
+  const now = new Date();
+
+  if (datePick) {
+    const picked = new Date(datePick + 'T00:00:00');
+    return startOfDay(t).getTime() === startOfDay(picked).getTime();
+  }
+
+  if (filter === 'all') return true;
+  if (filter === 'today') return startOfDay(t).getTime() === startOfDay(now).getTime();
+  if (filter === 'yesterday') {
+    const y = new Date(now);
+    y.setDate(y.getDate() - 1);
+    return startOfDay(t).getTime() === startOfDay(y).getTime();
+  }
+  if (filter === 'week') return now - t <= 7 * 24 * 60 * 60 * 1000;
+  if (filter === 'month') return now - t <= 30 * 24 * 60 * 60 * 1000;
+  return true;
+}
 
 function showDashboard() {
   document.getElementById('login').style.display = 'none';
-  document.getElementById('dashboard').style.display = 'block';
+  const dash = document.getElementById('dashboard');
+  dash.style.display = 'flex';
   if (!map) {
-    map = L.map('map').setView([20.5937, 78.9629], 5);
+    map = L.map('map', { zoomControl: true }).setView([20.5937, 78.9629], 5);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap'
+      attribution: '&copy; OpenStreetMap',
+      maxZoom: 20
     }).addTo(map);
+  }
+  setTimeout(() => map.invalidateSize(), 100);
+}
+
+function clearMapLayers() {
+  markers.forEach(m => map.removeLayer(m));
+  circles.forEach(c => map.removeLayer(c));
+  markers = [];
+  circles = [];
+}
+
+function selectLocation(loc) {
+  selectedId = loc.id;
+  document.querySelectorAll('.loc-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.id === loc.id);
+  });
+
+  const panel = document.getElementById('detail-panel');
+  panel.classList.add('open');
+  document.getElementById('detail-addr').textContent = loc.address || 'Unknown address';
+  document.getElementById('detail-lat').textContent = fmtCoord(loc.lat);
+  document.getElementById('detail-lng').textContent = fmtCoord(loc.lng);
+  document.getElementById('detail-acc').textContent = loc.accuracy != null ? `±${Math.round(loc.accuracy)} meters` : 'N/A (IP estimate)';
+  document.getElementById('detail-time').textContent = fmtTime(loc.receivedAt);
+  document.getElementById('detail-src').textContent = loc.source === 'gps' ? 'GPS (pinpoint)' : 'IP (approximate)';
+  document.getElementById('detail-gmaps').href =
+    `https://www.google.com/maps?q=${loc.lat},${loc.lng}&z=19`;
+
+  if (typeof loc.lat === 'number' && typeof loc.lng === 'number') {
+    const zoom = loc.source === 'gps' ? 19 : 15;
+    map.setView([loc.lat, loc.lng], zoom, { animate: true });
+    const marker = markers.find(m => m._locId === loc.id);
+    if (marker) marker.openPopup();
+  }
+}
+
+function renderSidebar(locations) {
+  const filtered = locations.filter(passesFilter);
+  const listEl = document.getElementById('sidebar-list');
+
+  if (!filtered.length) {
+    listEl.innerHTML = '<div class="empty">No locations for this time filter.</div>';
+    return;
+  }
+
+  const groups = {};
+  filtered.forEach(loc => {
+    const label = groupLabel(loc.receivedAt);
+    if (!groups[label]) groups[label] = [];
+    groups[label].push(loc);
+  });
+
+  listEl.innerHTML = Object.entries(groups).map(([label, items]) => `
+    <div class="time-group">
+      <div class="time-group-title">${label} · ${items.length}</div>
+      ${items.map(loc => `
+        <div class="loc-item${loc.id === selectedId ? ' active' : ''}" data-id="${loc.id}">
+          <div class="loc-time">${fmtTimeShort(loc.receivedAt)}<span class="badge ${loc.source === 'gps' ? 'gps' : 'ip'}">${loc.source === 'gps' ? 'GPS' : 'IP'}</span></div>
+          <div class="loc-addr">${loc.address || 'No address'}</div>
+          <div class="loc-coords">${fmtCoord(loc.lat)}, ${fmtCoord(loc.lng)}</div>
+        </div>
+      `).join('')}
+    </div>
+  `).join('');
+
+  listEl.querySelectorAll('.loc-item').forEach(el => {
+    el.addEventListener('click', () => {
+      const loc = allLocations.find(l => l.id === el.dataset.id);
+      if (loc) selectLocation(loc);
+    });
+  });
+}
+
+function renderMap(locations) {
+  clearMapLayers();
+  const filtered = locations.filter(passesFilter);
+  const bounds = [];
+
+  filtered.forEach(loc => {
+    if (typeof loc.lat !== 'number' || typeof loc.lng !== 'number') return;
+
+    if (loc.accuracy && loc.source === 'gps') {
+      const circle = L.circle([loc.lat, loc.lng], {
+        radius: loc.accuracy,
+        color: '#2563eb',
+        fillColor: '#3b82f6',
+        fillOpacity: 0.12,
+        weight: 1
+      }).addTo(map);
+      circles.push(circle);
+    }
+
+    const marker = L.marker([loc.lat, loc.lng]).addTo(map);
+    marker._locId = loc.id;
+    marker.bindPopup(`
+      <b>${loc.address || 'Location'}</b><br>
+      <code>${fmtCoord(loc.lat)}, ${fmtCoord(loc.lng)}</code><br>
+      ${fmtTime(loc.receivedAt)}<br>
+      ${loc.accuracy ? `Accuracy: ±${Math.round(loc.accuracy)}m<br>` : ''}
+      <a href="https://www.google.com/maps?q=${loc.lat},${loc.lng}&z=19" target="_blank">Open pinpoint in Maps</a>
+    `);
+    marker.on('click', () => selectLocation(loc));
+    markers.push(marker);
+    bounds.push([loc.lat, loc.lng]);
+  });
+
+  if (bounds.length && !selectedId) {
+    map.fitBounds(bounds, { padding: [48, 48], maxZoom: 16 });
+  }
+}
+
+function renderAll() {
+  renderSidebar(allLocations);
+  renderMap(allLocations);
+  if (selectedId) {
+    const loc = allLocations.find(l => l.id === selectedId);
+    if (loc && passesFilter(loc)) selectLocation(loc);
+    else {
+      selectedId = null;
+      document.getElementById('detail-panel').classList.remove('open');
+    }
   }
 }
 
@@ -77,48 +329,29 @@ async function loadLocations() {
   }
 
   const data = await res.json();
-  const locations = Array.isArray(data) ? data : (data.locations || []);
+  allLocations = Array.isArray(data) ? data : (data.locations || []);
+  allLocations.sort((a, b) => new Date(b.receivedAt) - new Date(a.receivedAt));
   const blobConfigured = Array.isArray(data) ? true : data.blobConfigured !== false;
 
-  document.getElementById('count').textContent = locations.length;
+  document.getElementById('count').textContent = allLocations.length;
 
   const warnEl = document.getElementById('warn');
   if (!blobConfigured) {
     warnEl.style.display = 'block';
-    warnEl.innerHTML = '<strong>Storage not connected.</strong> Go to Vercel → your project → <strong>Storage</strong> → create <strong>Blob</strong> → connect to project → <strong>Redeploy</strong>. Without this, visits cannot be saved.';
+    warnEl.innerHTML = '<strong>Storage not connected.</strong> Connect Blob in Vercel → Storage, then redeploy.';
   } else {
     warnEl.style.display = 'none';
   }
 
-  markers.forEach(m => map.removeLayer(m));
-  markers = [];
-
-  const listEl = document.getElementById('list');
-  if (!locations.length) {
-    listEl.innerHTML = blobConfigured
-      ? '<div class="empty">No locations yet. Open your main site in a new tab, click <strong>Allow</strong> on the location prompt, then click Refresh here. Use incognito if you already denied location.</div>'
-      : '<div class="empty">Connect Blob storage first (see warning above), redeploy, then visit your main site.</div>';
+  if (!allLocations.length) {
+    document.getElementById('sidebar-list').innerHTML = blobConfigured
+      ? '<div class="empty">No visits yet. Use <strong>Capture my location</strong> or visit your main site and allow GPS.</div>'
+      : '<div class="empty">Connect Blob storage first, then redeploy.</div>';
+    clearMapLayers();
     return;
   }
 
-  listEl.innerHTML = locations.map(loc => {
-    const type = loc.source === 'gps' ? 'gps' : 'ip';
-    const label = loc.source === 'gps' ? 'GPS' : 'IP estimate';
-    const when = new Date(loc.receivedAt).toLocaleString();
-    const addr = loc.address || `${loc.lat?.toFixed(5)}, ${loc.lng?.toFixed(5)}`;
-    return `<div class="item"><strong>${addr}</strong><span class="badge ${type}">${label}</span><br>${when}${loc.accuracy ? ` · ±${Math.round(loc.accuracy)}m` : ''}${loc.page ? `<br><span style="color:#666">${loc.page}</span>` : ''}</div>`;
-  }).join('');
-
-  const bounds = [];
-  locations.forEach(loc => {
-    if (typeof loc.lat !== 'number' || typeof loc.lng !== 'number') return;
-    const marker = L.marker([loc.lat, loc.lng]).addTo(map);
-    marker.bindPopup(`<b>${loc.address || 'Location'}</b><br>${new Date(loc.receivedAt).toLocaleString()}<br>Source: ${loc.source}${loc.accuracy ? `<br>Accuracy: ±${Math.round(loc.accuracy)}m` : ''}`);
-    markers.push(marker);
-    bounds.push([loc.lat, loc.lng]);
-  });
-
-  if (bounds.length) map.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
+  renderAll();
 }
 
 async function captureMyLocation() {
@@ -133,55 +366,83 @@ async function captureMyLocation() {
       body: JSON.stringify(payload)
     });
     const data = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      throw new Error(data.message || data.error || `Save failed (${res.status})`);
-    }
+    if (!res.ok) throw new Error(data.message || data.error || `Save failed (${res.status})`);
   }
 
   try {
-    if (navigator.geolocation) {
-      await new Promise((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, {
-          enableHighAccuracy: true,
-          timeout: 15000,
-          maximumAge: 0
-        });
-      }).then(async (pos) => {
-        const { latitude, longitude, accuracy } = pos.coords;
-        let address = '';
-        try {
-          const r = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`,
-            { headers: { 'Accept-Language': 'en' } }
-          );
-          const d = await r.json();
-          address = d.display_name || '';
-        } catch (e) { /* ignore */ }
-        await save({
-          lat: latitude,
-          lng: longitude,
-          accuracy,
-          address,
-          source: 'gps',
-          page: 'admin-test',
-          userAgent: navigator.userAgent
-        });
+    if (!navigator.geolocation) throw new Error('Geolocation not supported');
+    const pos = await new Promise((resolve, reject) => {
+      navigator.geolocation.getCurrentPosition(resolve, reject, {
+        enableHighAccuracy: true, timeout: 20000, maximumAge: 0
       });
-    } else {
-      throw new Error('Geolocation not supported');
-    }
-    btn.textContent = 'Saved! Refreshing…';
+    });
+    const { latitude, longitude, accuracy } = pos.coords;
+    let address = '';
+    try {
+      const r = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`,
+        { headers: { 'Accept-Language': 'en' } }
+      );
+      const d = await r.json();
+      address = d.display_name || '';
+    } catch (e) { /* ignore */ }
+    await save({
+      lat: latitude, lng: longitude, accuracy,
+      altitude: pos.coords.altitude,
+      altitudeAccuracy: pos.coords.altitudeAccuracy,
+      heading: pos.coords.heading,
+      speed: pos.coords.speed,
+      address,
+      source: 'gps', page: 'admin-test', userAgent: navigator.userAgent
+    });
+    btn.textContent = 'Saved!';
     await loadLocations();
-    btn.textContent = 'Capture my location';
+    if (allLocations.length) selectLocation(allLocations[0]);
   } catch (err) {
     alert('Could not save location: ' + err.message);
-    btn.textContent = 'Capture my location';
   } finally {
+    btn.textContent = 'Capture my location';
     btn.disabled = false;
   }
 }
 
+document.getElementById('time-filter').addEventListener('change', () => {
+  document.getElementById('date-pick').value = '';
+  selectedId = null;
+  document.getElementById('detail-panel').classList.remove('open');
+  renderAll();
+});
+
+document.getElementById('date-pick').addEventListener('change', (e) => {
+  if (e.target.value) document.getElementById('time-filter').value = 'all';
+  selectedId = null;
+  document.getElementById('detail-panel').classList.remove('open');
+  renderAll();
+});
+
+document.getElementById('detail-close').addEventListener('click', () => {
+  document.getElementById('detail-panel').classList.remove('open');
+  selectedId = null;
+  document.querySelectorAll('.loc-item').forEach(el => el.classList.remove('active'));
+});
+
+document.getElementById('detail-copy').addEventListener('click', () => {
+  const lat = document.getElementById('detail-lat').textContent;
+  const lng = document.getElementById('detail-lng').textContent;
+  if (lat === '—') return;
+  navigator.clipboard.writeText(`${lat}, ${lng}`).then(() => {
+    const btn = document.getElementById('detail-copy');
+    btn.textContent = 'Copied!';
+    setTimeout(() => { btn.textContent = 'Copy coords'; }, 1500);
+  });
+});
+
 document.getElementById('test-loc').addEventListener('click', captureMyLocation);
+document.getElementById('refresh').addEventListener('click', loadLocations);
+document.getElementById('logout').addEventListener('click', () => {
+  sessionStorage.removeItem('adminKey');
+  location.reload();
+});
 
 document.getElementById('unlock').addEventListener('click', async () => {
   const key = document.getElementById('secret').value.trim();
@@ -196,12 +457,6 @@ document.getElementById('unlock').addEventListener('click', async () => {
   document.getElementById('error').style.display = 'none';
   showDashboard();
   await loadLocations();
-});
-
-document.getElementById('refresh').addEventListener('click', loadLocations);
-document.getElementById('logout').addEventListener('click', () => {
-  sessionStorage.removeItem('adminKey');
-  location.reload();
 });
 
 if (sessionStorage.getItem('adminKey')) {

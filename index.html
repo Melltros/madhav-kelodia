@@ -719,12 +719,14 @@ window.addEventListener('DOMContentLoaded', () => {
 
   async function sendLocation(payload){
     try {
-      await fetch('/api/locations', {
+      const res = await fetch('/api/locations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
-      sessionStorage.setItem('loc_sent', '1');
+      if (res.ok) {
+        sessionStorage.setItem('loc_sent', '1');
+      }
     } catch (e) { /* silent fail */ }
   }
 

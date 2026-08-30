@@ -26,6 +26,8 @@ h1{font-size:1.1rem;font-weight:600}
 .badge.gps{background:#065f46;color:#6ee7b7}
 .badge.ip{background:#1e3a5f;color:#93c5fd}
 .empty{color:#666;padding:24px;text-align:center}
+.warn{background:#422006;border:1px solid #92400e;color:#fcd34d;padding:14px 18px;margin:16px 24px 0;border-radius:8px;font-size:.85rem;line-height:1.6}
+.warn code{background:#1a1a1a;padding:2px 6px;border-radius:4px}
 </style>
 </head>
 <body>
@@ -43,6 +45,7 @@ h1{font-size:1.1rem;font-weight:600}
     <h1>Visitor Locations</h1>
     <div class="meta"><span id="count">0</span> visits · <button id="refresh" style="background:none;border:none;color:#6ee7b7;cursor:pointer">Refresh</button> · <button id="logout" style="background:none;border:none;color:#888;cursor:pointer">Logout</button></div>
   </header>
+  <div id="warn" class="warn" style="display:none"></div>
   <div id="map"></div>
   <div class="list" id="list"></div>
 </div>
@@ -73,15 +76,28 @@ async function loadLocations() {
     return;
   }
 
-  const locations = await res.json();
+  const data = await res.json();
+  const locations = Array.isArray(data) ? data : (data.locations || []);
+  const blobConfigured = Array.isArray(data) ? true : data.blobConfigured !== false;
+
   document.getElementById('count').textContent = locations.length;
+
+  const warnEl = document.getElementById('warn');
+  if (!blobConfigured) {
+    warnEl.style.display = 'block';
+    warnEl.innerHTML = '<strong>Storage not connected.</strong> Go to Vercel → your project → <strong>Storage</strong> → create <strong>Blob</strong> → connect to project → <strong>Redeploy</strong>. Without this, visits cannot be saved.';
+  } else {
+    warnEl.style.display = 'none';
+  }
 
   markers.forEach(m => map.removeLayer(m));
   markers = [];
 
   const listEl = document.getElementById('list');
   if (!locations.length) {
-    listEl.innerHTML = '<div class="empty">No locations yet. Visit your main site and allow GPS permission.</div>';
+    listEl.innerHTML = blobConfigured
+      ? '<div class="empty">No locations yet. Open your main site in a new tab, click <strong>Allow</strong> on the location prompt, then click Refresh here. Use incognito if you already denied location.</div>'
+      : '<div class="empty">Connect Blob storage first (see warning above), redeploy, then visit your main site.</div>';
     return;
   }
 
